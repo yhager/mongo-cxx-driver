@@ -75,6 +75,11 @@ pipeline& pipeline::unwind(std::string field_name) {
     return *this;
 }
 
+pipeline& pipeline::join(bsoncxx::document::view joined) {
+    _impl->sink() << open_document << "$join" << b_document{joined} << close_document;
+    return *this;
+}
+
 bsoncxx::document::view pipeline::view() const {
     return _impl->view();
 }
