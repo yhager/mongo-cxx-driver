@@ -26,6 +26,7 @@ set(mongocxx_sources
     database.cpp
     exception/base.cpp
     instance.cpp
+    logger.cpp
     model/delete_many.cpp
     model/delete_one.cpp
     model/insert_one.cpp
@@ -47,6 +48,7 @@ set(mongocxx_sources
     options/ssl.cpp
     options/update.cpp
     pipeline.cpp
+    pool.cpp
     private/libbson.cpp
     private/libmongoc.cpp
     read_preference.cpp

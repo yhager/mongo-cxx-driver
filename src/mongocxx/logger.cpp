@@ -1,4 +1,4 @@
-// Copyright 2014 MongoDB Inc.
+// Copyright 2015 MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#include <mongocxx/logger.hpp>
 
-#include <bsoncxx/config/prelude.hpp>
+namespace mongocxx {
+MONGOCXX_INLINE_NAMESPACE_BEGIN
 
-#include <type_traits>
+logger::logger() = default;
+logger::~logger() = default;
 
-namespace bsoncxx {
-BSONCXX_INLINE_NAMESPACE_BEGIN
-namespace util {
-
-template <typename FunctionLike, typename Signature>
-using is_functor = std::is_convertible<FunctionLike, std::function<Signature>>;
-
-}  // namespace util
-BSONCXX_INLINE_NAMESPACE_END
-}  // namespace bsoncxx
-
-#include <bsoncxx/config/postlude.hpp>
+MONGOCXX_INLINE_NAMESPACE_END
+}  // namespace mongocxx
