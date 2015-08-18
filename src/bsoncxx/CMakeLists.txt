@@ -53,7 +53,7 @@ link_directories(${LIBBSON_LIBRARY_DIRS})
 if (BSONCXX_POLY_USE_MNMLSTC AND NOT BSONCXX_POLY_USE_SYSTEM_MNMLSTC)
     ExternalProject_Get_Property(EP_mnmlstc_core source_dir install_dir)
     include_directories(${source_dir}/include)
-    install(DIRECTORY ${install_dir}/include/core
+    install(DIRECTORY ${source_dir}/include/core
       DESTINATION ${BSONCXX_HEADER_INSTALL_DIR}/bsoncxx/third_party/mnmlstc
       COMPONENT dev
       FILES_MATCHING

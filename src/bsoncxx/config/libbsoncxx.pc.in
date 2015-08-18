@@ -7,5 +7,5 @@ Description: The BSON C++ Library
 URL: http://github.com/mongodb/mongo-cxx-driver
 Version: @BSONCXX_VERSION@
 Requires.private: libbson-@LIBBSON_REQUIRED_ABI_VERSION@
-Cflags: -I${includedir}/bsoncxx/@BSONCXX_DIRECTORY_PREFIX@
+Cflags: -I${includedir}/bsoncxx/@BSONCXX_DIRECTORY_PREFIX@ -I${includedir}/bsoncxx/@BSONCXX_DIRECTORY_PREFIX@/bsoncxx/third_party/mnmlstc
 Libs: -L${libdir} -lbsoncxx
