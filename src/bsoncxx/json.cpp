@@ -118,11 +118,7 @@ class json_visitor {
     }
 
     void visit_value(const types::b_date& value) {
-        out << "{" << std::endl;
-        pad(1);
-        out << "\"$date\" : " << value.value << std::endl;
-        pad();
-        out << "}";
+        out << "new Date(" << value.value << ")";
     }
 
     void visit_value(const types::b_null&) {
