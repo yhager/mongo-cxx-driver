@@ -80,6 +80,11 @@ pipeline& pipeline::join(bsoncxx::document::view joined) {
     return *this;
 }
 
+pipeline& pipeline::distinct() {
+    _impl->sink() << open_document << "$distinct" << true << close_document;
+    return *this;
+}
+
 bsoncxx::document::view pipeline::view() const {
     return _impl->view();
 }

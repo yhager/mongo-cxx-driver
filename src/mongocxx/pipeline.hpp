@@ -151,6 +151,7 @@ class MONGOCXX_API pipeline {
     pipeline& unwind(std::string field_name);
 
     pipeline& join(bsoncxx::document::view joined);
+    pipeline& distinct();
 
     ///
     /// @return A view of the underlying BSON document this pipeline represents.
