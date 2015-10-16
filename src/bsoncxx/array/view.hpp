@@ -117,8 +117,8 @@ class BSONCXX_API view {
     std::size_t length() const;
 
     ///
-    /// Checks if the underlying document is empty, i.e. it is equivalent to
-    /// the trivial document '{}'.
+    /// Checks if the underlying buffer is empty, i.e. it is equivalent to
+    /// the trivial array '[]'.
     ///
     /// @return true if the underlying document is empty.
     ///
