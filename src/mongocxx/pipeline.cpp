@@ -70,8 +70,22 @@ pipeline& pipeline::sort(bsoncxx::document::view sort) {
     return *this;
 }
 
-pipeline& pipeline::unwind(std::string field_name) {
-    _impl->sink() << open_document << "$unwind" << field_name << close_document;
+pipeline& pipeline::unwind(std::string field_name, bsoncxx::document::view elem_match) {
+    if (elem_match.empty())
+    {
+        _impl->sink() << open_document << "$unwind" << field_name << close_document;
+    }
+    else
+    {
+        _impl->sink()
+            << open_document
+                << "$unwind"
+                << open_document
+                    << "field" << field_name
+                    << "$elemMatch" << b_document{elem_match}
+                << close_document
+            << close_document;
+    }
     return *this;
 }
 

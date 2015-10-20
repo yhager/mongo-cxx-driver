@@ -148,7 +148,7 @@ class MONGOCXX_API pipeline {
     ///
     /// @param field_name the name of the field to unwind.
     ///
-    pipeline& unwind(std::string field_name);
+    pipeline& unwind(std::string field_name, bsoncxx::document::view elem_match);
 
     pipeline& join(bsoncxx::document::view joined);
     pipeline& distinct();
