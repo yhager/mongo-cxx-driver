@@ -95,7 +95,7 @@ pipeline& pipeline::join(bsoncxx::document::view joined) {
 }
 
 pipeline& pipeline::distinct() {
-    _impl->sink() << open_document << "$distinct" << true << close_document;
+    _impl->sink() << open_document << "$distinctDocs" << true << close_document;
     return *this;
 }
 
