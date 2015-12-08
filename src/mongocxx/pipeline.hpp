@@ -152,7 +152,7 @@ class MONGOCXX_API pipeline {
 
     pipeline& join(bsoncxx::document::view joined);
     pipeline& distinct();
-
+    pipeline& disable_optimizer();
     ///
     /// @return A view of the underlying BSON document this pipeline represents.
     ///

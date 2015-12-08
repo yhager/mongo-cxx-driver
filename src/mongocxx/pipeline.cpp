@@ -99,6 +99,11 @@ pipeline& pipeline::distinct() {
     return *this;
 }
 
+pipeline& pipeline::disable_optimizer() {
+    _impl->sink() << open_document << "$optimizer" << 0 << close_document;
+    return *this;
+}
+
 bsoncxx::document::view pipeline::view() const {
     return _impl->view();
 }
