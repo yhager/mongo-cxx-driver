@@ -139,12 +139,12 @@ install(FILES
 
 install(TARGETS
     mongocxx
-    LIBRARY DESTINATION lib COMPONENT runtime
+    LIBRARY DESTINATION lib64 COMPONENT runtime
 )
 
 install(TARGETS
     mongocxx_static
-    ARCHIVE DESTINATION lib COMPONENT runtime
+    ARCHIVE DESTINATION lib64 COMPONENT runtime
 )
 
 add_subdirectory(test)

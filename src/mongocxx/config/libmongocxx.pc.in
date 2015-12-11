@@ -1,4 +1,4 @@
-prefix=@CMAKE_INSTALL_PREFIX@
+prefix=/usr
 includedir=${prefix}/include
 libdir=${prefix}/lib
 

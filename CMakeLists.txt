@@ -42,7 +42,7 @@ find_package(PkgConfig)
 if(DEFINED $ENV{PKG_CONFIG_PATH})
     set(PKG_CONFIG_PATH $ENV{PKG_CONFIG_PATH})
 else()
-    set(PKG_CONFIG_PATH "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
+    set(PKG_CONFIG_PATH "/usr/lib64/pkgconfig")
 endif()
 
 # Ensure that RPATH is used on OSX
@@ -102,5 +102,6 @@ SET(CPACK_PACKAGE_CONTACT "Yuval Hager <yhager@jsonar.com>")
 SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libmongoc-1.0-0")
 #SET(CPACK_DEBIAN_PACKAGE_SUGGESTS "")
+SET(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/usr/lib64/pkgconfig")
 
 INCLUDE(CPack)
