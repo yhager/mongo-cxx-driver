@@ -2,6 +2,17 @@ project(MONGO_CXX_DRIVER LANGUAGES CXX)
 
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 
+if(EXISTS "/etc/os-release")
+  file(STRINGS /etc/os-release OS_INFO)
+  list(GET OS_INFO 2 OS_INFO_ID)
+  string(REPLACE "ID=" "" OS_INFO_ID_VALUE ${OS_INFO_ID})
+  if(${OS_INFO_ID_VALUE} STREQUAL "\"centos\"" OR ${OS_INFO_ID_VALUE} STREQUAL "\"rhel\"")
+    set(CPACK_GENERATOR "RPM")
+  elseif(${OS_INFO_ID_VALUE} STREQUAL ubuntu)
+    set(CPACK_GENERATOR "DEB")
+  endif()
+endif()
+
 # Add in our modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
