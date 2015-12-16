@@ -118,12 +118,12 @@ install(FILES
 
 install(TARGETS
     bsoncxx
-    LIBRARY DESTINATION lib64 COMPONENT runtime
+    LIBRARY DESTINATION ${LIBPATH} COMPONENT runtime
 )
 
 install(TARGETS
     bsoncxx_static
-    ARCHIVE DESTINATION lib64 COMPONENT runtime
+    ARCHIVE DESTINATION ${LIBPATH} COMPONENT runtime
 )
 
 add_subdirectory(test)
