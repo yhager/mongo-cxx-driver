@@ -104,6 +104,11 @@ pipeline& pipeline::disable_optimizer() {
     return *this;
 }
 
+pipeline& pipeline::out(bsoncxx::document::view append) {
+    _impl->sink() << open_document << "$out" << b_document{append} << close_document;
+    return *this;
+}
+
 bsoncxx::document::view pipeline::view() const {
     return _impl->view();
 }
