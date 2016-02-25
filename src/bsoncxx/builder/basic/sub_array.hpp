@@ -14,9 +14,11 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
+#include <bsoncxx/builder/basic/helpers.hpp>
+#include <bsoncxx/builder/concatenate.hpp>
 #include <bsoncxx/builder/core.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -36,6 +38,9 @@ void value_append(core* core, T&& t);
 ///
 class BSONCXX_API sub_array {
    public:
+    ///
+    /// Default constructor
+    ///
     BSONCXX_INLINE sub_array(core* core) : _core(core) {
     }
 
@@ -43,22 +48,35 @@ class BSONCXX_API sub_array {
     /// Appends multiple BSON values.
     ///
     template <typename Arg, typename... Args>
-    BSONCXX_INLINE
-    void append(Arg&& a, Args&&... args) {
-        append(std::forward<Arg>(a));
+    BSONCXX_INLINE void append(Arg&& a, Args&&... args) {
+        append_(std::forward<Arg>(a));
         append(std::forward<Args>(args)...);
     }
 
     ///
-    /// Appends a BSON value.
+    /// Inductive base-case for the variadic append(...)
     ///
-    template <typename T>
     BSONCXX_INLINE
-    void append(T&& t) {
-        impl::value_append(_core, std::forward<T>(t));
+    void append() {
     }
 
    private:
+    //
+    // Appends a BSON value.
+    //
+    template <typename T>
+    BSONCXX_INLINE void append_(T&& t) {
+        impl::value_append(_core, std::forward<T>(t));
+    }
+
+    //
+    // Concatenates another bson array directly.
+    //
+    BSONCXX_INLINE
+    void append_(concatenate_array array) {
+        _core->concatenate(array.view());
+    }
+
     core* _core;
 };
 

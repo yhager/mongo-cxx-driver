@@ -14,11 +14,9 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
-#include <bsoncxx/stdx/string_view.hpp>
 #include <bsoncxx/document/value.hpp>
-
+#include <bsoncxx/private/helpers.hpp>
+#include <bsoncxx/stdx/string_view.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 #include <mongocxx/private/database.hpp>
@@ -26,41 +24,42 @@
 #include <mongocxx/private/read_preference.hpp>
 #include <mongocxx/private/write_concern.hpp>
 
-#include <mongoc.h>
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class collection::impl {
-
    public:
-    impl(mongoc_collection_t* collection,
-         bsoncxx::stdx::string_view database_name,
-         const class client::impl* client,
-         bsoncxx::stdx::string_view name) :
-        collection_t(collection),
-        database_name(std::move(database_name)),
-        client_impl(client),
-        name(name)
-    {}
+    impl(mongoc_collection_t* collection, stdx::string_view database_name,
+         const class client::impl* client)
+        : collection_t(collection), database_name(std::move(database_name)), client_impl(client) {
+    }
 
-    ~impl() { libmongoc::collection_destroy(collection_t); }
+    impl(const impl& i)
+        : collection_t{libmongoc::collection_copy(i.collection_t)},
+          database_name{i.database_name},
+          client_impl{i.client_impl} {
+    }
+
+    // This method is deleted because we only use the copy constructor.
+    impl& operator=(const impl& i) = delete;
+
+    ~impl() {
+        libmongoc::collection_destroy(collection_t);
+    }
 
     bsoncxx::document::value gle() {
-        const bson_t* gle = mongoc_collection_get_last_error(collection_t);
-        libbson::scoped_bson_t error_copy;
-        bson_copy_to(gle, error_copy.bson());
-        return std::move(error_copy.steal());
+        auto gle = libmongoc::collection_get_last_error(collection_t);
+        return bsoncxx::helpers::value_from_bson_t(gle);
     }
 
     mongoc_collection_t* collection_t;
     std::string database_name;
     const class client::impl* client_impl;
-    std::string name;
-
-}; // class impl
+};
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

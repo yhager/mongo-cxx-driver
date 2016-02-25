@@ -14,31 +14,27 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <mongocxx/read_preference.hpp>
-
 #include <mongocxx/private/libmongoc.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class read_preference::impl {
-
    public:
-    impl(mongoc_read_prefs_t* read_pref)
-        : read_preference_t(read_pref)
-    {}
+    impl(mongoc_read_prefs_t* read_pref) : read_preference_t(read_pref) {
+    }
 
     ~impl() {
         libmongoc::read_prefs_destroy(read_preference_t);
     }
 
     mongoc_read_prefs_t* read_preference_t;
-
-}; // class impl
+};
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

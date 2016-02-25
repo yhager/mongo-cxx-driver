@@ -14,13 +14,15 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
+#include <chrono>
 #include <cstdint>
 
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/stdx/optional.hpp>
 #include <mongocxx/read_preference.hpp>
+#include <mongocxx/stdx.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -30,9 +32,7 @@ namespace options {
 /// Class representing the optional arguments to a MongoDB aggregation operation.
 ///
 class MONGOCXX_API aggregate {
-
    public:
-
     ///
     /// Enables writing to temporary files. When set to @c true, aggregation stages can write data
     /// to the _tmp subdirectory in the dbPath directory. The server-side default is @c false.
@@ -47,7 +47,7 @@ class MONGOCXX_API aggregate {
     ///
     /// @return Whether disk use is allowed.
     ///
-    const bsoncxx::stdx::optional<bool>& allow_disk_use() const;
+    const stdx::optional<bool>& allow_disk_use() const;
 
     ///
     /// Sets the number of documents to return per batch.
@@ -62,27 +62,27 @@ class MONGOCXX_API aggregate {
     ///
     /// @return The current batch size.
     ///
-    const bsoncxx::stdx::optional<std::int32_t>& batch_size() const;
+    const stdx::optional<std::int32_t>& batch_size() const;
 
     ///
     /// Sets the maximum amount of time for this operation to run server-side in milliseconds.
     ///
-    /// @param max_time_ms
+    /// @param max_time
     ///   The max amount of time (in milliseconds).
     ///
     /// @see http://docs.mongodb.org/manual/reference/operator/meta/maxTimeMS
     ///
-    void max_time_ms(std::int64_t max_time_ms);
+    void max_time(std::chrono::milliseconds max_time);
 
     ///
-    /// The current max_time_ms setting.
+    /// The current max_time setting.
     ///
     /// @return
     ///   The current max time (in milliseconds).
     ///
     /// @see http://docs.mongodb.org/manual/reference/operator/meta/maxTimeMS
     ///
-    const bsoncxx::stdx::optional<std::int64_t>& max_time_ms() const;
+    const stdx::optional<std::chrono::milliseconds>& max_time() const;
 
     ///
     /// Sets whether the results of this aggregation should be returned via a cursor.
@@ -102,7 +102,7 @@ class MONGOCXX_API aggregate {
     ///
     /// @return the current use_cursor setting
     ///
-    const bsoncxx::stdx::optional<bool>& use_cursor() const;
+    const stdx::optional<bool>& use_cursor() const;
 
     ///
     /// Sets the read_preference for this operation.
@@ -120,15 +120,29 @@ class MONGOCXX_API aggregate {
     ///
     /// @see http://docs.mongodb.org/manual/core/read-preference/
     ///
-    const bsoncxx::stdx::optional<class read_preference>& read_preference() const;
+    const stdx::optional<class read_preference>& read_preference() const;
+
+    ///
+    /// Sets whether the $out stage should bypass document validation.
+    ///
+    /// @param bypass_document_validation whether or not to bypass validation.
+    ///
+    void bypass_document_validation(bool bypass_document_validation);
+
+    ///
+    /// The current bypass_document_validation setting.
+    ///
+    /// @return the current bypass_document_validation setting
+    ///
+    const stdx::optional<bool>& bypass_document_validation() const;
 
    private:
-    bsoncxx::stdx::optional<bool> _allow_disk_use;
-    bsoncxx::stdx::optional<std::int32_t> _batch_size;
-    bsoncxx::stdx::optional<std::int64_t> _max_time_ms;
-    bsoncxx::stdx::optional<bool> _use_cursor;
-    bsoncxx::stdx::optional<class read_preference> _read_preference;
-
+    stdx::optional<bool> _allow_disk_use;
+    stdx::optional<std::int32_t> _batch_size;
+    stdx::optional<std::chrono::milliseconds> _max_time;
+    stdx::optional<bool> _use_cursor;
+    stdx::optional<class read_preference> _read_preference;
+    stdx::optional<bool> _bypass_document_validation;
 };
 
 }  // namespace options

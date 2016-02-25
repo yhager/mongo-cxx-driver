@@ -18,8 +18,8 @@
 #include <cstddef>
 #include <string>
 
+#include <mongocxx/instance.hpp>
 #include <mongocxx/private/libmongoc.hpp>
-
 #include <mongocxx/client.hpp>
 #include <mongocxx/options/ssl.hpp>
 #include <mongocxx/pool.hpp>
@@ -28,6 +28,8 @@ using namespace mongocxx;
 
 TEST_CASE("a pool is created with the correct MongoDB URI", "[pool]") {
     MOCK_POOL
+
+    instance::current();
 
     bool destroy_called = false;
     client_pool_destroy->interpose([&](::mongoc_client_pool_t*) { destroy_called = true; });
@@ -56,17 +58,21 @@ TEST_CASE("a pool is created with the correct MongoDB URI", "[pool]") {
     REQUIRE(destroy_called);
 }
 
+#if defined(MONGOC_HAVE_SSL)
 TEST_CASE(
     "If we pass an engaged SSL options struct to the pool class, we will use it to configure the "
     "underlying mongoc pool",
     "[pool]") {
     MOCK_POOL
 
+    instance::current();
+
     const std::string pem_file = "foo";
     const std::string pem_password = "bar";
     const std::string ca_file = "baz";
     const std::string ca_dir = "garply";
-    const bool weak_cert_validation = true;
+    const std::string crl_file = "crl_file";
+    const bool allow_invalid_certificates = true;
 
     bool set_ssl_opts_called = false;
     options::ssl ssl_opts;
@@ -74,7 +80,8 @@ TEST_CASE(
     ssl_opts.pem_password(pem_password);
     ssl_opts.ca_file(ca_file);
     ssl_opts.ca_dir(ca_dir);
-    ssl_opts.weak_cert_validation(weak_cert_validation);
+    ssl_opts.crl_file(crl_file);
+    ssl_opts.allow_invalid_certificates(allow_invalid_certificates);
 
     ::mongoc_ssl_opt_t interposed = {0};
 
@@ -91,14 +98,18 @@ TEST_CASE(
     REQUIRE(interposed.pem_pwd == pem_password);
     REQUIRE(interposed.ca_file == ca_file);
     REQUIRE(interposed.ca_dir == ca_dir);
-    REQUIRE(interposed.weak_cert_validation == weak_cert_validation);
+    REQUIRE(interposed.crl_file == crl_file);
+    REQUIRE(interposed.weak_cert_validation == allow_invalid_certificates);
 }
+#endif
 
 TEST_CASE(
     "calling acquire on a pool returns a entry that is released when it goes out of "
     "scope",
     "[pool]") {
     MOCK_POOL
+
+    instance::current();
 
     bool pop_called = false;
     client_pool_pop->interpose([&](::mongoc_client_pool_t*) {
@@ -127,7 +138,16 @@ TEST_CASE(
     "[pool]") {
     MOCK_POOL
 
+    instance::current();
+
+// GCC before 4.9.0 doesn't place max_align_t in the std namespace.
+#if defined(__clang__) || !defined(__GNUC__) || (__GNUC__ > 4) || \
+    (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)
+    std::max_align_t dummy_address;
+#else
     max_align_t dummy_address;
+#endif
+
     bool try_pop_called = false;
 
     mongoc_client_t* fake = reinterpret_cast<mongoc_client_t*>(&dummy_address);
@@ -143,7 +163,6 @@ TEST_CASE(
 
         REQUIRE(!!client);
         REQUIRE(try_pop_called);
-        REQUIRE(client->get()->implementation() == fake);
     }
 }
 
@@ -152,6 +171,8 @@ TEST_CASE(
     "returns a null pointer",
     "[pool]") {
     MOCK_POOL
+
+    instance::current();
 
     client_pool_try_pop->interpose([](::mongoc_client_pool_t*) { return nullptr; });
 

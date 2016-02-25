@@ -14,16 +14,15 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <functional>
 #include <memory>
 
 #include <bsoncxx/stdx/optional.hpp>
-
 #include <mongocxx/options/ssl.hpp>
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -83,18 +82,6 @@ class MONGOCXX_API pool {
     /// disengaged optional if a client is not available.
     ///
     stdx::optional<entry> try_acquire();
-
-    ///
-    /// Gets a handle to the underlying implementation.
-    ///
-    /// Returned pointer is only valid for the lifetime of this object.
-    ///
-    /// @deprecated Future versions of the driver reserve the right to change the implementation
-    ///   and remove this interface entirely.
-    ///
-    /// @return Pointer to implementation of this object, or nullptr if not available.
-    ///
-    MONGOCXX_DEPRECATED void* implementation() const;
 
    private:
     MONGOCXX_PRIVATE void _release(client* client);

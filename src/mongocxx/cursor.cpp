@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <mongocxx/cursor.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -19,19 +21,20 @@
 
 #include <bson.h>
 
-#include <mongocxx/cursor.hpp>
-
-#include <mongocxx/exception/query.hpp>
+#include <bsoncxx/stdx/make_unique.hpp>
+#include <mongocxx/exception/private/error_category.hpp>
+#include <mongocxx/exception/private/mongoc_error.hpp>
+#include <mongocxx/exception/query_exception.hpp>
 #include <mongocxx/private/cursor.hpp>
 #include <mongocxx/private/libmongoc.hpp>
 
-#include <bsoncxx/stdx/make_unique.hpp>
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 cursor::cursor(void* cursor_ptr)
-    : _impl(bsoncxx::stdx::make_unique<impl>(static_cast<mongoc_cursor_t*>(cursor_ptr))) {
+    : _impl(stdx::make_unique<impl>(static_cast<mongoc_cursor_t*>(cursor_ptr))) {
 }
 
 cursor::cursor(cursor&&) noexcept = default;
@@ -49,7 +52,7 @@ cursor::iterator& cursor::iterator::operator++() {
     if (libmongoc::cursor_next(_cursor->_impl->cursor_t, &out)) {
         _doc = bsoncxx::document::view(bson_get_data(out), out->len);
     } else if (libmongoc::cursor_error(_cursor->_impl->cursor_t, &error)) {
-        throw exception::query(std::make_tuple(error.message, error.code));
+        throw_exception<query_exception>(error);
     } else {
         _cursor = nullptr;
     };
@@ -66,10 +69,6 @@ cursor::iterator cursor::begin() {
 
 cursor::iterator cursor::end() {
     return iterator(nullptr);
-}
-
-void* cursor::implementation() const {
-    return _impl->cursor_t;
 }
 
 cursor::iterator::iterator(cursor* cursor) : _cursor(cursor) {

@@ -14,6 +14,8 @@
 
 #include <mongocxx/result/update.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace result {
@@ -24,20 +26,21 @@ update::update(result::bulk_write result) : _result(std::move(result)) {
 const result::bulk_write& update::result() const {
     return _result;
 }
-std::int64_t update::matched_count() const {
+std::int32_t update::matched_count() const {
     return _result.matched_count();
 }
 
-std::int64_t update::modified_count() const {
+std::int32_t update::modified_count() const {
     return _result.modified_count();
 }
 
-bsoncxx::stdx::optional<bsoncxx::document::element> update::upserted_id() const {
-    return _result.upserted_ids();
+stdx::optional<bsoncxx::document::element> update::upserted_id() const {
+    if (_result.upserted_ids().size() == 0) {
+        return stdx::nullopt;
+    }
+    return _result.upserted_ids()[0];
 }
 
 }  // namespace result
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

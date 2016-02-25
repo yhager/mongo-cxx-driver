@@ -14,13 +14,14 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <cstdint>
 
 #include <bsoncxx/types.hpp>
-#include <mongocxx/result/bulk_write.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+#include <mongocxx/result/bulk_write.hpp>
+#include <mongocxx/stdx.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -28,7 +29,6 @@ namespace result {
 
 /// Class representing the result of a MongoDB replace_one operation.
 class MONGOCXX_API replace_one {
-
    public:
     // This constructor is public for testing purposes only
     explicit replace_one(result::bulk_write result);
@@ -45,26 +45,25 @@ class MONGOCXX_API replace_one {
     ///
     /// @return The number of documents that were matched.
     ///
-    std::int64_t matched_count() const;
+    std::int32_t matched_count() const;
 
     ///
     /// Gets the number of documents that were modified during this operation.
     ///
     /// @return The number of documents that were modified.
     ///
-    std::int64_t modified_count() const;
+    std::int32_t modified_count() const;
 
     ///
     /// Gets the id of the upserted document.
     ///
     /// @return The value of the _id field for upserted document.
     ///
-    bsoncxx::stdx::optional<bsoncxx::document::element> upserted_id() const;
+    stdx::optional<bsoncxx::document::element> upserted_id() const;
 
    private:
     result::bulk_write _result;
-
-}; // class replace_one
+};
 
 }  // namespace result
 MONGOCXX_INLINE_NAMESPACE_END

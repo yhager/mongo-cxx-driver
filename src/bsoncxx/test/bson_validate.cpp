@@ -1,3 +1,17 @@
+// Copyright 2016 MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "catch.hpp"
 
 #include <bsoncxx/validate.hpp>
@@ -36,7 +50,7 @@ TEST_CASE("validate accepts bson we produce", "[bsoncxx::validate]") {
 }
 
 TEST_CASE("validate doesn't accept random bytes", "[bsoncxx::validate]") {
-    std::array<uint8_t, 12> arr{0xDE, 0xAD, 0xBE, 0xEF, 0xF0, 0x0B, 0x45};
+    std::array<uint8_t, 12> arr{{0xDE, 0xAD, 0xBE, 0xEF, 0xF0, 0x0B, 0x45}};
     REQUIRE(is_disengaged(validate(arr.data(), arr.size())));
 }
 
@@ -66,24 +80,17 @@ TEST_CASE("configuring optional validations", "[bsoncxx::validate]") {
         vtor.check_dollar_keys(true);
 
         SECTION("at top level") {
-            doc << "$foo" << "bar";
+            doc << "$foo"
+                << "bar";
             auto view = doc.view();
             REQUIRE(is_disengaged(validate(view.data(), view.length(), vtor)));
         }
 
         SECTION("and in nested documents") {
             using namespace bsoncxx::builder::stream;
-            doc << "foo"
-                  << open_array
-                    << open_document
-                      << "garply"
-                        << open_array
-                          << open_document
-                            << "$bar" << "baz"
-                          << close_document
-                        << close_array
-                      << close_document
-                    << close_array;
+            doc << "foo" << open_array << open_document << "garply" << open_array << open_document
+                << "$bar"
+                << "baz" << close_document << close_array << close_document << close_array;
 
             auto view = doc.view();
             REQUIRE(is_disengaged(validate(view.data(), view.length(), vtor)));
@@ -94,25 +101,17 @@ TEST_CASE("configuring optional validations", "[bsoncxx::validate]") {
         vtor.check_dot_keys(true);
 
         SECTION("at top level") {
-            doc << "foo.noooo" << "bar";
+            doc << "foo.noooo"
+                << "bar";
             auto view = doc.view();
             REQUIRE(is_disengaged(validate(view.data(), view.length(), vtor)));
         }
 
-
         SECTION("and in nested documents") {
             using namespace bsoncxx::builder::stream;
-            doc << "foo"
-                  << open_array
-                    << open_document
-                      << "garply"
-                        << open_array
-                          << open_document
-                            << "bad.dot" << "baz"
-                          << close_document
-                        << close_array
-                      << close_document
-                    << close_array;
+            doc << "foo" << open_array << open_document << "garply" << open_array << open_document
+                << "bad.dot"
+                << "baz" << close_document << close_array << close_document << close_array;
 
             auto view = doc.view();
             REQUIRE(is_disengaged(validate(view.data(), view.length(), vtor)));
@@ -120,7 +119,10 @@ TEST_CASE("configuring optional validations", "[bsoncxx::validate]") {
     }
 
     SECTION("we can get the invalid offset") {
-        doc << "foo" << "bar" << "baz" << "garply";
+        doc << "foo"
+            << "bar"
+            << "baz"
+            << "garply";
         auto view = doc.view();
 
         // write a null byte at offset 9

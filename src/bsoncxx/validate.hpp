@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <cstdint>
 #include <memory>
 
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -41,8 +41,8 @@ class validator;
 ///   An engaged optional containing a view if the document is valid, or
 ///   an unengaged optional if the document is invalid.
 ///
-BSONCXX_API stdx::optional<document::view> validate(const std::uint8_t* data,
-                                                    std::size_t length);
+BSONCXX_API stdx::optional<document::view> BSONCXX_CALL
+validate(const std::uint8_t* data, std::size_t length);
 
 ///
 /// Validates a BSON document. This overload provides additional control over the
@@ -64,10 +64,9 @@ BSONCXX_API stdx::optional<document::view> validate(const std::uint8_t* data,
 ///   An engaged optional containing a view if the document is valid, or
 ///   an unengaged optional if the document is invalid.
 ///
-BSONCXX_API stdx::optional<document::view> validate(const std::uint8_t* data,
-                                                    std::size_t length,
-                                                    const validator& validator,
-                                                    std::size_t* invalid_offset = nullptr);
+BSONCXX_API stdx::optional<document::view> BSONCXX_CALL
+validate(const std::uint8_t* data, std::size_t length, const validator& validator,
+         std::size_t* invalid_offset = nullptr);
 ///
 /// A validator is used to enable or disable specific checks that can be
 /// performed during BSON validation.
@@ -91,6 +90,12 @@ class BSONCXX_API validator {
     ///   If true, UTF-8 validation is performed.
     ///
     void check_utf8(bool check_utf8);
+
+    ///
+    /// Getter for the current check_utf8 value of the underlying validator.
+    ///
+    /// @return True if UTF-8 validation is performed.
+    ///
     bool check_utf8() const;
 
     ///
@@ -102,6 +107,14 @@ class BSONCXX_API validator {
     ///   If true, UTF-8 validation (with null bytes allowed) is performed.
     ///
     void check_utf8_allow_null(bool check_utf8_allow_null);
+
+    ///
+    /// Getter for the current check_utf8_allow_null value of the underlying
+    /// validator.
+    ///
+    /// @return True if UTF-8 validation (with null bytes allowed) is
+    ///   performed.
+    ///
     bool check_utf8_allow_null() const;
 
     ///
@@ -112,6 +125,13 @@ class BSONCXX_API validator {
     ///   If true, keys starting with '$' will be treated as invalid.
     ///
     void check_dollar_keys(bool check_dollar_keys);
+
+    ///
+    /// Getter for the current check_dollar_keys value of the underlying
+    /// validator.
+    ///
+    /// @return True if keys starting with '$' will be treated as invalid.
+    ///
     bool check_dollar_keys() const;
 
     ///
@@ -122,6 +142,13 @@ class BSONCXX_API validator {
     ///   If true, keys containing '.' will be treated as invalid.
     ///
     void check_dot_keys(bool check_dot_keys);
+
+    ///
+    /// Getter for the current check_dot_keys value of the underlying
+    /// validator.
+    ///
+    /// @return True if keys containing '.' will be treated as invalid.
+    ///
     bool check_dot_keys() const;
 
    private:

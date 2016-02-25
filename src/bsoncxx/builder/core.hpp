@@ -14,10 +14,9 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 
 #include <bsoncxx/array/value.hpp>
 #include <bsoncxx/array/view.hpp>
@@ -25,6 +24,8 @@
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/stdx/string_view.hpp>
 #include <bsoncxx/types.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -39,12 +40,8 @@ namespace builder {
 ///   who wish to write their own abstractions may find this class useful.
 ///
 class BSONCXX_API core {
-
    public:
     class BSONCXX_PRIVATE impl;
-
-    // TODO this should fit with the larger bson exception heirarchy
-    class invalid_state : public std::runtime_error {};
 
     ///
     /// Constructs an empty BSON datum.
@@ -53,8 +50,10 @@ class BSONCXX_API core {
     ///   true if the top-level BSON datum should be an array.
     ///
     explicit core(bool is_array);
+
     core(core&& rhs) noexcept;
     core& operator=(core&& rhs) noexcept;
+
     ~core();
 
     ///
@@ -216,15 +215,6 @@ class BSONCXX_API core {
     void append(const types::value& value);
 
     ///
-    /// Append a string literal as a BSON UTF-8 string.
-    ///
-    template <std::size_t n>
-    BSONCXX_INLINE
-    void append(const char (&v)[n]) {
-        append(types::b_utf8{v});
-    }
-
-    ///
     /// Append a STL string as a BSON UTF-8 string.
     ///
     void append(std::string str);
@@ -233,6 +223,19 @@ class BSONCXX_API core {
     /// Append a string view as a BSON UTF-8 string.
     ///
     void append(stdx::string_view str);
+
+    ///
+    /// Append a char* or const char*
+    ///
+    /// We disable all other pointer types to prevent the surprising implicit
+    /// conversion to bool.
+    ///
+    template <typename T>
+    BSONCXX_INLINE void append(T* v) {
+        static_assert(std::is_same<typename std::remove_const<T>::type, char>::value,
+                      "append is disabled for non-char pointer types");
+        append(types::b_utf8{v});
+    }
 
     ///
     /// Append a native boolean as a BSON boolean.

@@ -14,31 +14,27 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <mongocxx/write_concern.hpp>
-
 #include <mongocxx/private/libmongoc.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class write_concern::impl {
-
    public:
-    impl(mongoc_write_concern_t* write_concern)
-        : write_concern_t(write_concern)
-    {}
+    impl(mongoc_write_concern_t* write_concern) : write_concern_t(write_concern) {
+    }
 
     ~impl() {
         libmongoc::write_concern_destroy(write_concern_t);
     }
 
     mongoc_write_concern_t* write_concern_t;
-
-}; // class impl
+};
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

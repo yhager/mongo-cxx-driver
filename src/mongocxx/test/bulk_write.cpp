@@ -17,7 +17,7 @@
 
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/types.hpp>
-
+#include <mongocxx/instance.hpp>
 #include <mongocxx/private/libmongoc.hpp>
 #include <mongocxx/bulk_write.hpp>
 #include <mongocxx/write_concern.hpp>
@@ -25,6 +25,8 @@
 using namespace mongocxx;
 
 TEST_CASE("a bulk_write will setup a mongoc bulk operation", "[bulk_write]") {
+    instance::current();
+
     auto construct = libmongoc::bulk_operation_new.create_instance();
     bool construct_called = false;
     bool ordered_value = false;
@@ -35,25 +37,29 @@ TEST_CASE("a bulk_write will setup a mongoc bulk operation", "[bulk_write]") {
     });
 
     SECTION("with an ordered bulk write") {
-        bulk_write(true);
+        { bulk_write bw; }
         REQUIRE(construct_called);
         REQUIRE(ordered_value);
     }
 
     SECTION("with an unordered bulk write") {
-        bulk_write(false);
+        options::bulk_write bw_opts;
+        bw_opts.ordered(false);
+        { bulk_write bw(bw_opts); }
         REQUIRE(construct_called);
         REQUIRE(!ordered_value);
     }
 }
 
 TEST_CASE("destruction of a bulk_write will destroy mongoc operation", "[bulk_write]") {
+    instance::current();
+
     auto destruct = libmongoc::bulk_operation_destroy.create_instance();
     bool destruct_called = false;
 
-    destruct->visit([&destruct_called](mongoc_bulk_operation_t* op) { destruct_called = true; });
+    destruct->visit([&destruct_called](mongoc_bulk_operation_t*) { destruct_called = true; });
 
-    bulk_write(true);
+    { bulk_write bw; }
     REQUIRE(destruct_called);
 }
 
@@ -64,7 +70,7 @@ class SingleDocumentFun {
         _called = false;
     }
 
-    void operator()(mongoc_bulk_operation_t* bulk, const bson_t* document) {
+    void operator()(mongoc_bulk_operation_t*, const bson_t* document) {
         _called = true;
         REQUIRE(bson_get_data(document) == _document.data());
     }
@@ -102,18 +108,25 @@ class FilteredDocumentFun : public SingleDocumentFun {
 };
 
 TEST_CASE("passing write operations to append calls corresponding C function", "[bulk_write]") {
-    bulk_write bw(true);
-    bsoncxx::builder::stream::document filter_builder, doc_builder;
+    instance::current();
+
+    bulk_write bw;
+    bsoncxx::builder::stream::document filter_builder, doc_builder, update_doc_builder;
     filter_builder << "_id" << 1;
     doc_builder << "_id" << 2;
+    update_doc_builder << "$set" << bsoncxx::builder::stream::open_document << "_id" << 2
+                       << bsoncxx::builder::stream::close_document;
 
     bsoncxx::document::view filter = filter_builder.view();
     bsoncxx::document::view doc = doc_builder.view();
+    bsoncxx::document::view update_doc = update_doc_builder.view();
 
     bool single_doc_fun_called;
     SingleDocumentFun single_doc_fun(single_doc_fun_called, doc);
     bool filtered_doc_fun_called;
     FilteredDocumentFun filtered_doc_fun(filtered_doc_fun_called, filter, doc);
+    bool update_filtered_doc_fun_called;
+    FilteredDocumentFun update_filtered_doc_fun(update_filtered_doc_fun_called, filter, update_doc);
 
     SECTION("insert_one invokes mongoc_bulk_operation_insert") {
         auto bulk_insert = libmongoc::bulk_operation_insert.create_instance();
@@ -127,43 +140,43 @@ TEST_CASE("passing write operations to append calls corresponding C function", "
     SECTION("update_one invokes mongoc_bulk_operation_update_one") {
         auto bulk_insert = libmongoc::bulk_operation_update_one.create_instance();
         bool bulk_update_one_called = false;
-        bulk_insert->visit(filtered_doc_fun);
+        bulk_insert->visit(update_filtered_doc_fun);
 
-        bw.append(model::update_one(filter, doc));
-        REQUIRE(filtered_doc_fun.called());
+        bw.append(model::update_one(filter, update_doc));
+        REQUIRE(update_filtered_doc_fun.called());
     }
 
     SECTION("update_one with upsert invokes mongoc_bulk_operation_update_one with upsert true") {
         auto bulk_insert = libmongoc::bulk_operation_update_one.create_instance();
         bool bulk_update_one_called = false;
-        filtered_doc_fun.upsert(true);
-        bulk_insert->visit(filtered_doc_fun);
+        update_filtered_doc_fun.upsert(true);
+        bulk_insert->visit(update_filtered_doc_fun);
 
-        model::update_one uo(filter, doc);
+        model::update_one uo(filter, update_doc);
         uo.upsert(true);
         bw.append(uo);
-        REQUIRE(filtered_doc_fun.called());
+        REQUIRE(update_filtered_doc_fun.called());
     }
 
     SECTION("update_many invokes mongoc_bulk_operation_update") {
         auto bulk_insert = libmongoc::bulk_operation_update.create_instance();
         bool bulk_update_called = false;
-        bulk_insert->visit(filtered_doc_fun);
+        bulk_insert->visit(update_filtered_doc_fun);
 
-        bw.append(model::update_many(filter, doc));
-        REQUIRE(filtered_doc_fun.called());
+        bw.append(model::update_many(filter, update_doc));
+        REQUIRE(update_filtered_doc_fun.called());
     }
 
     SECTION("update_many with upsert invokes mongoc_bulk_operation_update with upsert true") {
         auto bulk_insert = libmongoc::bulk_operation_update.create_instance();
         bool bulk_update_called = false;
-        filtered_doc_fun.upsert(true);
-        bulk_insert->visit(filtered_doc_fun);
+        update_filtered_doc_fun.upsert(true);
+        bulk_insert->visit(update_filtered_doc_fun);
 
-        model::update_many um(filter, doc);
+        model::update_many um(filter, update_doc);
         um.upsert(true);
         bw.append(um);
-        REQUIRE(filtered_doc_fun.called());
+        REQUIRE(update_filtered_doc_fun.called());
     }
 
     SECTION("delete_one invokes mongoc_bulk_operation_remove_one") {

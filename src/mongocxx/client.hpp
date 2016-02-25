@@ -14,17 +14,18 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <memory>
 
-#include <bsoncxx/stdx/string_view.hpp>
-
+#include <bsoncxx/string/view_or_value.hpp>
 #include <mongocxx/database.hpp>
+#include <mongocxx/options/client.hpp>
+#include <mongocxx/read_concern.hpp>
 #include <mongocxx/read_preference.hpp>
+#include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
 #include <mongocxx/write_concern.hpp>
-#include <mongocxx/options/client.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -34,10 +35,10 @@ MONGOCXX_INLINE_NAMESPACE_BEGIN
 ///
 /// Acts as a logical gateway for working with databases contained within a MongoDB server.
 ///
-/// Databases that are created via this client inherit the @c read_preference and @c write_concern
-/// settings of this client when they are created. The lifetimes of objects created via a client
-/// object (databases, collections, cursors, etc...) @b must be a subset of the lifetime of the
-/// client that created them.
+/// Databases that are created via this client inherit the @c read_concern, @c read_preference, and
+/// @c write_concern settings of this client when they are created. The lifetimes of objects created
+/// via a client object (databases, collections, cursors, etc...) @b must be a subset of the
+/// lifetime of the client that created them.
 ///
 /// Example:
 /// @code
@@ -45,12 +46,14 @@ MONGOCXX_INLINE_NAMESPACE_BEGIN
 ///   mongocxx::client mongo_client("mongodb://localhost:27017");
 /// @endcode
 ///
-/// @todo Make iterable for databases on the server
-/// @todo Add + implement missing client api methods
-///
 class MONGOCXX_API client {
-
    public:
+    ///
+    /// Default constructs a new client. The client is not connected and is equivalent to the
+    /// state of a moved-from client. The only valid actions to take with a default constructed
+    /// 'client' are to assign to it, or destroy it.
+    ///
+    client() noexcept;
 
     ///
     /// Creates a new client connection to MongoDB.
@@ -60,10 +63,7 @@ class MONGOCXX_API client {
     /// @param options
     ///   Additional options that cannot be specified via the mongodb_uri
     ///
-    client(
-        const class uri& mongodb_uri = mongocxx::uri(),
-        const options::client& options = options::client()
-    );
+    client(const class uri& mongodb_uri, const options::client& options = options::client());
 
     ///
     /// Move constructs a client.
@@ -81,22 +81,37 @@ class MONGOCXX_API client {
     ~client();
 
     ///
-    /// Gets a handle to the underlying implementation.
+    /// Returns true if the client is valid, meaning it was not default constructed
+    /// or moved from.
     ///
-    /// Returned pointer is only valid for the lifetime of this object.
+    explicit operator bool() const noexcept;
+
     ///
-    /// @deprecated Future versions of the driver reserve the right to change the implementation
-    ///   and remove this interface entirely.
+    /// Sets the read concern for this client.
     ///
-    /// @return Pointer to implementation of this object, or nullptr if not available.
+    /// Modifications at this level do not affect existing databases instances that have have been
+    /// created by this client but do affect new ones as databases inherit the @c read_concern
+    /// settings of their parent upon instantiation.
     ///
-    MONGOCXX_DEPRECATED void* implementation() const;
+    /// @param rc
+    ///   The new @c read_concern
+    ///
+    /// @see https://docs.mongodb.org/manual/reference/read-concern/
+    ///
+    void read_concern(class read_concern rc);
+
+    ///
+    /// Returns the current read concern for this client.
+    ///
+    /// @return The current @c read_concern
+    ///
+    class read_concern read_concern() const;
 
     ///
     /// Sets the read preference for this client.
     ///
-    /// Modifications at this level do not effect existing databases instances that have have been
-    /// created by this client but do effect new ones as databases inherit the @c read_preference
+    /// Modifications at this level do not affect existing databases instances that have have been
+    /// created by this client but do affect new ones as databases inherit the @c read_preference
     /// settings of their parent upon instantiation.
     ///
     /// @param rp
@@ -125,8 +140,8 @@ class MONGOCXX_API client {
     ///
     /// Sets the write concern for this client.
     ///
-    /// @note Modifications at this level do not effect existing databases or collection instances
-    /// that have come from this client but do effect new ones as databases will receive a copy of
+    /// @note Modifications at this level do not affect existing databases or collection instances
+    /// that have come from this client but do affect new ones as databases will receive a copy of
     /// this client's @c write_concern upon instantiation.
     ///
     /// @param wc
@@ -150,8 +165,8 @@ class MONGOCXX_API client {
     ///
     /// @return The database
     ///
-    class database database(bsoncxx::stdx::string_view name) const &;
-    class database database(bsoncxx::stdx::string_view name) const && = delete;
+    class database database(bsoncxx::string::view_or_value name) const&;
+    class database database(bsoncxx::string::view_or_value name) const&& = delete;
 
     ///
     /// Allows the syntax @c client["db_name"] as a convenient shorthand for the client::database()
@@ -164,8 +179,8 @@ class MONGOCXX_API client {
     ///
     /// @return Client side representation of a server side database
     ///
-    MONGOCXX_INLINE class database operator[](bsoncxx::stdx::string_view name) const &;
-    MONGOCXX_INLINE class database operator[](bsoncxx::stdx::string_view name) const && = delete;
+    MONGOCXX_INLINE class database operator[](bsoncxx::string::view_or_value name) const&;
+    MONGOCXX_INLINE class database operator[](bsoncxx::string::view_or_value name) const&& = delete;
 
     ///
     /// Enumerates the databases in the client.
@@ -187,13 +202,17 @@ class MONGOCXX_API client {
     friend class database;
     friend class pool;
 
-    explicit client(void* implementation);
+    MONGOCXX_PRIVATE explicit client(void* implementation);
 
     class MONGOCXX_PRIVATE impl;
+
+    MONGOCXX_PRIVATE impl& _get_impl();
+    MONGOCXX_PRIVATE const impl& _get_impl() const;
+
     std::unique_ptr<impl> _impl;
 };
 
-MONGOCXX_INLINE database client::operator[](bsoncxx::stdx::string_view name) const & {
+MONGOCXX_INLINE database client::operator[](bsoncxx::string::view_or_value name) const & {
     return database(name);
 }
 

@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <memory>
 
 #include <bsoncxx/document/view.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -33,10 +33,10 @@ class collection;
 /// @note By default, cursors timeout after 10 minutes of inactivity.
 ///
 class MONGOCXX_API cursor {
-
    public:
+    enum class type { k_non_tailable, k_tailable, k_tailable_await };
 
-    class iterator;
+    class MONGOCXX_API iterator;
 
     ///
     /// Move constructs a cursor.
@@ -63,40 +63,23 @@ class MONGOCXX_API cursor {
     /// @return the cursor::iterator
     iterator end();
 
-    ///
-    /// Gets a handle to the underlying implementation.
-    ///
-    /// Returned pointer is only valid for the lifetime of this object.
-    ///
-    /// @deprecated Future versions of the driver reserve the right to change the implementation
-    ///   and remove this interface entirely.
-    ///
-    /// @return Pointer to implementation of this object, or nullptr if not available.
-    ///
-    MONGOCXX_DEPRECATED void* implementation() const;
-
    private:
     friend class collection;
     friend class client;
     friend class database;
 
-    cursor(void* cursor_ptr);
+    MONGOCXX_PRIVATE cursor(void* cursor_ptr);
 
     class MONGOCXX_PRIVATE impl;
     std::unique_ptr<impl> _impl;
-
 };
 
 ///
 /// Class representing an input iterator of documents in a MongoDB cursor result set.
 ///
-class cursor::iterator : public std::iterator<
-    std::input_iterator_tag,
-    bsoncxx::document::view
-> {
-
+class MONGOCXX_API cursor::iterator
+    : public std::iterator<std::input_iterator_tag, bsoncxx::document::view> {
    public:
-
     ///
     /// Dereferences the view for the document currently being pointed to.
     ///
@@ -119,18 +102,25 @@ class cursor::iterator : public std::iterator<
 
    private:
     friend class cursor;
-    friend bool operator==(const iterator&, const iterator&);
-    friend bool operator!=(const iterator&, const iterator&);
 
-    explicit iterator(cursor* cursor);
+    ///
+    /// @{
+    ///
+    /// Compare two iterators for (in)-equality
+    ///
+    /// @relates iterator
+    ///
+    friend MONGOCXX_API bool MONGOCXX_CALL operator==(const iterator&, const iterator&);
+    friend MONGOCXX_API bool MONGOCXX_CALL operator!=(const iterator&, const iterator&);
+    ///
+    /// @}
+    ///
+
+    MONGOCXX_PRIVATE explicit iterator(cursor* cursor);
 
     cursor* _cursor;
     bsoncxx::document::view _doc;
-
 };
-
-MONGOCXX_API bool operator==(const cursor::iterator& lhs, const cursor::iterator& rhs);
-MONGOCXX_API bool operator!=(const cursor::iterator& lhs, const cursor::iterator& rhs);
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx

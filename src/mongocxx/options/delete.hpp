@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/stdx/optional.hpp>
 #include <mongocxx/write_concern.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -28,9 +28,7 @@ namespace options {
 /// Class representing the optional arguments to a MongoDB delete operation
 ///
 class MONGOCXX_API delete_options {
-
    public:
-
     ///
     /// Sets the write_concern for this operation.
     ///
@@ -50,11 +48,10 @@ class MONGOCXX_API delete_options {
     /// @see http://docs.mongodb.org/manual/core/write-concern/
     ///
     ///
-    const bsoncxx::stdx::optional<class write_concern>& write_concern() const;
+    const stdx::optional<class write_concern>& write_concern() const;
 
    private:
-    bsoncxx::stdx::optional<class write_concern> _write_concern;
-
+    stdx::optional<class write_concern> _write_concern;
 };
 
 }  // namespace options

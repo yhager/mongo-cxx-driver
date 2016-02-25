@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <cstddef>
 #include <cstdint>
+
+#include <bsoncxx/config/private/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -34,7 +34,7 @@ class itoa {
     std::size_t length() const;
 
    private:
-    void init();
+    BSONCXX_PRIVATE void init();
 
     uint32_t _val;
     const char* _str;
@@ -45,4 +45,4 @@ class itoa {
 BSONCXX_INLINE_NAMESPACE_END
 }  // namespace bsoncxx
 
-#include <bsoncxx/config/postlude.hpp>
+#include <bsoncxx/config/private/postlude.hpp>

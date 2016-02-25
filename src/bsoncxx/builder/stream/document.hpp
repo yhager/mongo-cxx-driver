@@ -14,61 +14,68 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <bsoncxx/builder/core.hpp>
 #include <bsoncxx/builder/stream/key_context.hpp>
 #include <bsoncxx/builder/stream/single_context.hpp>
 #include <bsoncxx/document/value.hpp>
 #include <bsoncxx/document/view.hpp>
 
+#include <bsoncxx/config/prelude.hpp>
+
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
 namespace builder {
 namespace stream {
 
+///
+/// A streaming interface for constructing
+/// a BSON document.
+///
+class document : public key_context<> {
+   public:
     ///
-    /// A streaming interface for constructing
-    /// a BSON document.
+    /// Default constructor.
     ///
-    class document : public key_context<> {
-    public:
-        BSONCXX_INLINE document() : key_context<>(&_core), _core(false) {}
+    BSONCXX_INLINE document() : key_context<>(&_core), _core(false) {
+    }
 
-        ///
-        /// @return A view of the BSON document.
-        ///
-        BSONCXX_INLINE bsoncxx::document::view view() const {
-            return _core.view_document();
-        }
+    ///
+    /// @return A view of the BSON document.
+    ///
+    BSONCXX_INLINE bsoncxx::document::view view() const {
+        return _core.view_document();
+    }
 
-        BSONCXX_INLINE operator bsoncxx::document::view() const {
-            return view();
-        }
+    ///
+    /// @return A view of the BSON document.
+    ///
+    BSONCXX_INLINE operator bsoncxx::document::view() const {
+        return view();
+    }
 
-        ///
-        /// Transfer ownership of the underlying document to the caller.
-        ///
-        /// @return A document::value with ownership of the document.
-        ///
-        /// @warning
-        ///  After calling extract() it is illegal to call any methods
-        ///  on this class, unless it is subsequenly moved into.
-        ///
-        BSONCXX_INLINE bsoncxx::document::value extract() {
-            return _core.extract_document();
-        }
+    ///
+    /// Transfer ownership of the underlying document to the caller.
+    ///
+    /// @return A document::value with ownership of the document.
+    ///
+    /// @warning
+    ///  After calling extract() it is illegal to call any methods
+    ///  on this class, unless it is subsequenly moved into.
+    ///
+    BSONCXX_INLINE bsoncxx::document::value extract() {
+        return _core.extract_document();
+    }
 
-        ///
-        /// Reset the underlying BSON to an empty document.
-        ///
-        BSONCXX_INLINE void clear() {
-            _core.clear();
-        }
+    ///
+    /// Reset the underlying BSON to an empty document.
+    ///
+    BSONCXX_INLINE void clear() {
+        _core.clear();
+    }
 
-    private:
-        core _core;
-    };
+   private:
+    core _core;
+};
 
 }  // namespace stream
 }  // namespace builder

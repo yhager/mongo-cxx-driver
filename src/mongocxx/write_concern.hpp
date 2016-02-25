@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <chrono>
 #include <cstdint>
 #include <stdexcept>
@@ -25,13 +23,16 @@
 #include <bsoncxx/stdx/string_view.hpp>
 #include <mongocxx/stdx.hpp>
 
+#include <mongocxx/config/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
+class bulk_write;
 class client;
 class collection;
 class database;
-class bulk_write;
+class uri;
 
 ///
 /// Class representing the server-side requirement for reporting the success of a write
@@ -50,11 +51,19 @@ class bulk_write;
 ///
 /// @see http://docs.mongodb.org/manual/core/write-concern/
 ///
-/// @todo this interface is terrible -- it's exactly what you get with the c-driver essentially.
-///
 class MONGOCXX_API write_concern {
-
    public:
+    ///
+    /// A class to represent the special case values for write_concern::nodes.
+    /// @see http://docs.mongodb.org/manual/reference/write-concern/#w-option
+    ///
+    enum class level {
+        k_default,
+        k_majority,
+        k_tag,
+        k_unacknowledged,
+        k_unknown,
+    };
 
     ///
     /// Constructs a new write_concern.
@@ -87,27 +96,6 @@ class MONGOCXX_API write_concern {
     ~write_concern();
 
     ///
-    /// Sets the fsync parameter for this write concern.
-    ///
-    /// @param fsync
-    ///   If @c true forces the database to fsync all files before reporting a write operation was
-    ///   successful.
-    ///
-    void fsync(bool fsync);
-
-    ///
-    /// Gets a handle to the underlying implementation.
-    ///
-    /// Returned pointer is only valid for the lifetime of this object.
-    ///
-    /// @deprecated Future versions of the driver reserve the right to change the implementation
-    ///   and remove this interface entirely.
-    ///
-    /// @return Pointer to implementation of this object, or nullptr if not available.
-    ///
-    MONGOCXX_DEPRECATED void* implementation() const;
-
-    ///
     /// Sets the journal parameter for this write concern.
     ///
     /// @param journal
@@ -125,7 +113,7 @@ class MONGOCXX_API write_concern {
     /// @param confirm_from
     ///   The number of replica set nodes that must acknowledge the write.
     ///
-    /// @warning Setting the number of nodes to 0 disables write acknowledgement and all other
+    /// @warning Setting the number of nodes to 0 disables write acknowledgment and all other
     /// write concern options.
     ///
     /// @warning Setting the number of nodes required to an amount greater than the number of
@@ -133,6 +121,20 @@ class MONGOCXX_API write_concern {
     /// is set.
     ///
     void nodes(std::int32_t confirm_from);
+
+    ///
+    /// Sets the acknowledge level.
+    /// @see http://docs.mongodb.org/manual/reference/write-concern/#w-option
+    ///
+    /// @param confirm_level
+    ///   Either level::k_unacknowledged, level::k_default, or level::k_majority.
+    ///
+    /// @note the acknowledge level of level::k_tag is set automatically when a tag is set.
+    ///
+    /// @warning Setting this to level::k_unacknowledged disables write acknowledgment and all other
+    /// write concern options.
+    ///
+    void acknowledge_level(level confirm_level);
 
     ///
     /// Requires that a majority of the nodes in a replica set acknowledge a write operation before
@@ -147,6 +149,8 @@ class MONGOCXX_API write_concern {
     ///
     /// Sets the name representing the server-side getLastErrorMode entry containing the list of
     /// nodes that must acknowledge a write operation before it is considered a success.
+    ///
+    /// @note the acknowledge level of level::k_tag is set automatically when a tag is set.
     ///
     /// @param tag
     ///   The string representing on of the "getLastErrorModes" in the replica set configuration.
@@ -165,13 +169,6 @@ class MONGOCXX_API write_concern {
     void timeout(std::chrono::milliseconds timeout);
 
     ///
-    /// Gets the current status of the fsync parameter.
-    ///
-    /// @return @c true if fsync is required, @c false if not.
-    ///
-    bool fsync() const;
-
-    ///
     /// Gets the current status of the journal parameter.
     ///
     /// @return @c true if journal is required, @c false if not.
@@ -180,10 +177,25 @@ class MONGOCXX_API write_concern {
 
     ///
     /// Gets the current number of nodes that this write_concern requires operations to reach.
+    /// This value will be unset iff the acknowledge_level is set instead.
+    /// This is unset by default.
+    ///
+    /// @see http://docs.mongodb.org/manual/reference/write-concern/#w-option
     ///
     /// @return The number of required nodes.
     ///
-    std::int32_t nodes() const;
+    stdx::optional<std::int32_t> nodes() const;
+
+    ///
+    /// Gets the current acknowledgment level.
+    /// This value will be unset iff the nodes value is set instead.
+    /// This is set by default.
+    ///
+    /// @see http://docs.mongodb.org/manual/reference/write-concern/#w-option
+    ///
+    /// @return The acknowledgment level.
+    ///
+    stdx::optional<level> acknowledge_level() const;
 
     ///
     /// Gets the current getLastErrorMode that is required by this write_concern.
@@ -207,17 +219,17 @@ class MONGOCXX_API write_concern {
     std::chrono::milliseconds timeout() const;
 
    private:
+    friend bulk_write;
     friend client;
     friend collection;
     friend database;
-    friend bulk_write;
+    friend uri;
 
     class MONGOCXX_PRIVATE impl;
 
-    write_concern(std::unique_ptr<impl>&& implementation);
+    MONGOCXX_PRIVATE write_concern(std::unique_ptr<impl>&& implementation);
 
     std::unique_ptr<impl> _impl;
-
 };
 
 MONGOCXX_INLINE_NAMESPACE_END

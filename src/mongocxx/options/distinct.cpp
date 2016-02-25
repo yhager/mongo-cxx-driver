@@ -13,29 +13,30 @@
 // limitations under the License.
 
 #include <mongocxx/options/distinct.hpp>
+
 #include <mongocxx/private/read_preference.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace options {
 
-void distinct::max_time_ms(std::int64_t max_time_ms) {
-    _max_time_ms = std::move(max_time_ms);
+void distinct::max_time(std::chrono::milliseconds max_time) {
+    _max_time = std::move(max_time);
 }
 
 void distinct::read_preference(class read_preference rp) {
     _read_preference = std::move(rp);
 }
 
-const bsoncxx::stdx::optional<std::int64_t>& distinct::max_time_ms() const {
-    return _max_time_ms;
+const stdx::optional<std::chrono::milliseconds>& distinct::max_time() const {
+    return _max_time;
 }
-const bsoncxx::stdx::optional<class read_preference>& distinct::read_preference() const {
+const stdx::optional<class read_preference>& distinct::read_preference() const {
     return _read_preference;
 }
 
 }  // namespace options
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

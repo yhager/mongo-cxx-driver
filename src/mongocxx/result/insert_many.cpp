@@ -14,24 +14,24 @@
 
 #include <mongocxx/result/insert_many.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace result {
 
-insert_many::insert_many(result::bulk_write result,
-                         std::map<std::size_t, bsoncxx::document::element> inserted_ids)
+insert_many::insert_many(result::bulk_write result, insert_many::id_map inserted_ids)
     : _result(std::move(result)), _generated_ids(std::move(inserted_ids)) {
 }
-std::map<std::size_t, bsoncxx::document::element> insert_many::inserted_ids() {
+
+insert_many::id_map insert_many::inserted_ids() {
     return _generated_ids;
 }
 
-std::int64_t insert_many::inserted_count() const {
+std::int32_t insert_many::inserted_count() const {
     return _result.inserted_count();
 }
 
 }  // namespace result
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

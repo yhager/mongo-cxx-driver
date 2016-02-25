@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <cstdint>
 
 #include <mongocxx/result/bulk_write.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -28,7 +28,6 @@ namespace result {
 /// Class representing the result of a MongoDB delete operation.
 ///
 class MONGOCXX_API delete_result {
-
    public:
     // This constructor is public for testing purposes only
     explicit delete_result(result::bulk_write result);
@@ -45,12 +44,11 @@ class MONGOCXX_API delete_result {
     ///
     /// @return The number of documents that were deleted.
     ///
-    std::int64_t deleted_count() const;
+    std::int32_t deleted_count() const;
 
    private:
     result::bulk_write _result;
-
-}; // class delete_result
+};
 
 }  // namespace result
 MONGOCXX_INLINE_NAMESPACE_END

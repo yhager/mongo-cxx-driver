@@ -14,28 +14,36 @@
 
 #include <mongocxx/options/find_one_and_delete.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace options {
 
-void find_one_and_delete::projection(bsoncxx::document::view projection) {
-    _projection = projection;
+void find_one_and_delete::max_time(std::chrono::milliseconds max_time) {
+    _max_time = std::move(max_time);
 }
 
-void find_one_and_delete::sort(bsoncxx::document::view ordering) {
-    _ordering = ordering;
+void find_one_and_delete::projection(bsoncxx::document::view_or_value projection) {
+    _projection = std::move(projection);
 }
 
-const bsoncxx::stdx::optional<bsoncxx::document::view>& find_one_and_delete::projection() const {
+void find_one_and_delete::sort(bsoncxx::document::view_or_value ordering) {
+    _ordering = std::move(ordering);
+}
+
+const stdx::optional<bsoncxx::document::view_or_value>& find_one_and_delete::projection() const {
     return _projection;
 }
 
-const bsoncxx::stdx::optional<bsoncxx::document::view>& find_one_and_delete::sort() const {
+const stdx::optional<bsoncxx::document::view_or_value>& find_one_and_delete::sort() const {
     return _ordering;
+}
+
+const stdx::optional<std::chrono::milliseconds>& find_one_and_delete::max_time() const {
+    return _max_time;
 }
 
 }  // namespace options
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

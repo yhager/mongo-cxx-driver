@@ -16,15 +16,18 @@
 
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/document/view.hpp>
+#include <mongocxx/instance.hpp>
 #include <mongocxx/read_preference.hpp>
 
 using namespace mongocxx;
 using namespace bsoncxx;
 
 TEST_CASE("Read Preference", "[read_preference]") {
+    instance::current();
 
     read_preference rp;
-    auto tags = builder::stream::document{} << "blah" << "wow" << builder::stream::finalize;
+    auto tags = builder::stream::document{} << "blah"
+                                            << "wow" << builder::stream::finalize;
 
     SECTION("Defaults to mode primary and empty tags") {
         REQUIRE(rp.mode() == read_preference::read_mode::k_primary);
@@ -36,7 +39,7 @@ TEST_CASE("Read Preference", "[read_preference]") {
         }
 
         SECTION("Can have tags changed") {
-            rp.tags(tags);
+            rp.tags(tags.view());
             REQUIRE(rp.tags().value() == tags);
         }
     }
@@ -48,7 +51,7 @@ TEST_CASE("Read Preference", "[read_preference]") {
     }
 
     SECTION("Can be constructed with a read_mode and tags") {
-        read_preference rp(read_preference::read_mode::k_secondary, tags);
+        read_preference rp(read_preference::read_mode::k_secondary, tags.view());
         REQUIRE(rp.mode() == read_preference::read_mode::k_secondary);
         REQUIRE(rp.tags().value() == tags);
     }
@@ -60,12 +63,13 @@ TEST_CASE("Read Preference", "[read_preference]") {
         REQUIRE_FALSE(rp == other);
         other.mode(read_preference::read_mode::k_primary);
         REQUIRE(rp == other);
-        other.tags(tags);
+        other.tags(tags.view());
         REQUIRE_FALSE(rp == other);
-        rp.tags(tags);
+        rp.tags(tags.view());
         REQUIRE(rp == other);
-        auto other_tags = builder::stream::document{} << "blah" << "other" << builder::stream::finalize;
-        other.tags(other_tags);
+        auto other_tags = builder::stream::document{} << "blah"
+                                                      << "other" << builder::stream::finalize;
+        other.tags(other_tags.view());
         REQUIRE_FALSE(rp == other);
     }
 }

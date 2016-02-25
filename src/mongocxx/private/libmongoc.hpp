@@ -14,17 +14,18 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <mongoc.h>
+
 #include <mongocxx/mock/mock.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace libmongoc {
 
 #ifdef MONGOCXX_TESTING
-#define MONGOCXX_LIBMONGOC_SYMBOL(name) extern mongocxx::mock::mock<decltype(&mongoc_##name)> name;
+#define MONGOCXX_LIBMONGOC_SYMBOL(name) extern mongocxx::mock::mock<decltype(&mongoc_##name)>& name;
 #include "libmongoc_symbols.hpp"
 #undef MONGOCXX_LIBMONGOC_SYMBOL
 #else
@@ -36,3 +37,5 @@ namespace libmongoc {
 }  // namespace libmongoc
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
+
+#include <mongocxx/config/private/postlude.hpp>

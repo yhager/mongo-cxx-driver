@@ -14,17 +14,16 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <bsoncxx/builder/stream/array.hpp>
 #include <bsoncxx/builder/stream/single_context.hpp>
 #include <mongocxx/pipeline.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class pipeline::impl {
-
    public:
     bsoncxx::builder::stream::single_context sink() {
         return _builder;
@@ -36,10 +35,9 @@ class pipeline::impl {
 
    private:
     bsoncxx::builder::stream::array _builder;
-
-}; // class impl
+};
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

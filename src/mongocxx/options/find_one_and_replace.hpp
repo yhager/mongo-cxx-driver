@@ -14,13 +14,15 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
+#include <chrono>
 #include <cstdint>
 
-#include <bsoncxx/document/view.hpp>
-#include <mongocxx/options/find_one_and_modify.hpp>
+#include <bsoncxx/document/view_or_value.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+#include <mongocxx/options/find_one_common_options.hpp>
+#include <mongocxx/stdx.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -30,27 +32,46 @@ namespace options {
 /// Class representing the optional arguments to a MongoDB find_and_modify replace operation
 ///
 class MONGOCXX_API find_one_and_replace {
-
    public:
+    ///
+    /// Whether or not to bypass document validation for this operation.
+    ///
+    /// @note
+    ///   On servers >= 3.2, the server applies validation by default. On servers < 3.2, this option
+    ///   is ignored.
+    ///
+    /// @param bypass_document_validation
+    ///   Whether or not to bypass document validation.
+    ///
+    /// @see https://docs.mongodb.org/manual/core/document-validation/#bypass-document-validation
+    ///
+    void bypass_document_validation(bool bypass_document_validation);
+
+    ///
+    /// The current setting for bypassing document validation.
+    ///
+    /// @return the current bypass document validation setting.
+    ///
+    const stdx::optional<bool>& bypass_document_validation() const;
 
     ///
     /// Sets the maximum amount of time for this operation to run (server-side) in milliseconds.
     ///
-    /// @param max_time_ms
+    /// @param max_time
     ///   The max amount of time (in milliseconds).
     ///
     /// @see http://docs.mongodb.org/manual/reference/operator/meta/maxTimeMS
     ///
-    void max_time_ms(std::int64_t max_time_ms);
+    void max_time(std::chrono::milliseconds max_time);
 
     ///
-    /// The current max_time_ms setting.
+    /// The current max_time setting.
     ///
-    /// @return the current max time (in milliseconds).
+    /// @return the current max allowed running time (in milliseconds).
     ///
     /// @see http://docs.mongodb.org/manual/reference/operator/meta/maxTimeMS
     ///
-    const bsoncxx::stdx::optional<std::int64_t>& max_time_ms() const;
+    const stdx::optional<std::chrono::milliseconds>& max_time() const;
 
     ///
     /// Sets a projection, which limits the fields to return.
@@ -60,24 +81,23 @@ class MONGOCXX_API find_one_and_replace {
     ///
     /// @see http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/
     ///
-    void projection(bsoncxx::document::view projection);
+    void projection(bsoncxx::document::view_or_value projection);
 
     ///
-    /// Gets the current projection set for this operation.
+    /// Gets the current projection for this operation.
     ///
     /// @return The current projection.
     ///
     /// @see http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/
     ///
-    ///
-    const bsoncxx::stdx::optional<bsoncxx::document::view>& projection() const;
+    const stdx::optional<bsoncxx::document::view_or_value>& projection() const;
 
     ///
     /// Set the desired version of the replaced document to return, either the original
     /// document, or the replacement. By default, the original document is returned.
     ///
     /// @param return_document
-    ///   Version of document to return, either original or updated.
+    ///   Version of document to return, either original or replaced.
     ///
     /// @see http://docs.mongodb.org/manual/reference/command/findAndModify/
     /// @see mongocxx::options::return_document
@@ -85,14 +105,14 @@ class MONGOCXX_API find_one_and_replace {
     void return_document(return_document return_document);
 
     ///
-    /// Which version of the updated document to return.
+    /// Which version of the replaced document to return.
     ///
-    /// @return State of document to return, either original or updated.
+    /// @return Version of document to return, either original or replacement.
     ///
     /// @see http://docs.mongodb.org/manual/reference/command/findAndModify/
     /// @see mongocxx::options::return_document
     ///
-    const bsoncxx::stdx::optional<enum return_document>& return_document() const;
+    const stdx::optional<mongocxx::options::return_document>& return_document() const;
 
     ///
     /// Sets the order by which to search the collection for a matching document.
@@ -105,7 +125,7 @@ class MONGOCXX_API find_one_and_replace {
     ///
     /// @see http://docs.mongodb.org/manual/reference/command/findAndModify/
     ///
-    void sort(bsoncxx::document::view ordering);
+    void sort(bsoncxx::document::view_or_value ordering);
 
     ///
     /// Gets the current sort ordering.
@@ -114,12 +134,12 @@ class MONGOCXX_API find_one_and_replace {
     ///
     /// @see http://docs.mongodb.org/manual/reference/command/findAndModify/
     ///
-    const bsoncxx::stdx::optional<bsoncxx::document::view>& sort() const;
+    const stdx::optional<bsoncxx::document::view_or_value>& sort() const;
 
     ///
     /// Sets the upsert flag on the operation. When @c true, the operation creates a new document if
-    /// no document matches the filter. When @c false, this operation does nothing if there are no
-    /// matching documents. The server-side default is false.
+    /// no document matches the filter. When @c false, this operation will do nothing if there are
+    /// no matching documents. The server-side default is false.
     ///
     /// @param upsert
     ///   Whether or not to perform an upsert.
@@ -135,15 +155,15 @@ class MONGOCXX_API find_one_and_replace {
     ///
     /// @see http://docs.mongodb.org/manual/reference/command/findAndModify/
     ///
-    const bsoncxx::stdx::optional<bool>& upsert() const;
+    const stdx::optional<bool>& upsert() const;
 
    private:
-    bsoncxx::stdx::optional<std::int64_t> _max_time_ms;
-    bsoncxx::stdx::optional<bsoncxx::document::view> _projection;
-    bsoncxx::stdx::optional<enum return_document> _return_document;
-    bsoncxx::stdx::optional<bsoncxx::document::view> _ordering;
-    bsoncxx::stdx::optional<bool> _upsert;
-
+    stdx::optional<bool> _bypass_document_validation;
+    stdx::optional<std::chrono::milliseconds> _max_time;
+    stdx::optional<bsoncxx::document::view_or_value> _projection;
+    stdx::optional<mongocxx::options::return_document> _return_document;
+    stdx::optional<bsoncxx::document::view_or_value> _ordering;
+    stdx::optional<bool> _upsert;
 };
 
 }  // namespace options

@@ -14,44 +14,61 @@
 
 #include <mongocxx/options/find_one_and_replace.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace options {
 
-void find_one_and_replace::projection(bsoncxx::document::view projection) {
-    _projection = projection;
+void find_one_and_replace::bypass_document_validation(bool bypass_document_validation) {
+    _bypass_document_validation = bypass_document_validation;
 }
 
-void find_one_and_replace::return_document(enum return_document return_document) {
+void find_one_and_replace::max_time(std::chrono::milliseconds max_time) {
+    _max_time = std::move(max_time);
+}
+
+void find_one_and_replace::projection(bsoncxx::document::view_or_value projection) {
+    _projection = std::move(projection);
+}
+
+void find_one_and_replace::return_document(mongocxx::options::return_document return_document) {
     _return_document = return_document;
 }
 
-void find_one_and_replace::sort(bsoncxx::document::view ordering) {
-    _ordering = ordering;
+void find_one_and_replace::sort(bsoncxx::document::view_or_value ordering) {
+    _ordering = std::move(ordering);
 }
 
 void find_one_and_replace::upsert(bool upsert) {
     _upsert = upsert;
 }
 
-const bsoncxx::stdx::optional<bsoncxx::document::view>& find_one_and_replace::projection() const {
+const stdx::optional<bool>& find_one_and_replace::bypass_document_validation() const {
+    return _bypass_document_validation;
+}
+
+const stdx::optional<std::chrono::milliseconds>& find_one_and_replace::max_time() const {
+    return _max_time;
+}
+
+const stdx::optional<bsoncxx::document::view_or_value>& find_one_and_replace::projection() const {
     return _projection;
 }
 
-const bsoncxx::stdx::optional<enum return_document>& find_one_and_replace::return_document() const {
+const stdx::optional<mongocxx::options::return_document>& find_one_and_replace::return_document()
+    const {
     return _return_document;
 }
 
-const bsoncxx::stdx::optional<bsoncxx::document::view>& find_one_and_replace::sort() const {
+const stdx::optional<bsoncxx::document::view_or_value>& find_one_and_replace::sort() const {
     return _ordering;
 }
 
-const bsoncxx::stdx::optional<bool>& find_one_and_replace::upsert() const {
+const stdx::optional<bool>& find_one_and_replace::upsert() const {
     return _upsert;
 }
 
 }  // namespace options
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

@@ -13,13 +13,14 @@
 // limitations under the License.
 
 #include <mongocxx/options/find.hpp>
+
 #include <mongocxx/private/read_preference.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace options {
-
-enum class find::cursor_type : std::uint8_t { k_non_tailable, k_tailable, k_tailable_await };
 
 void find::allow_partial_results(bool allow_partial) {
     _allow_partial_results = allow_partial;
@@ -29,32 +30,40 @@ void find::batch_size(std::int32_t batch_size) {
     _batch_size = batch_size;
 }
 
-void find::comment(std::string comment) {
-    _comment = comment;
+void find::comment(bsoncxx::string::view_or_value comment) {
+    _comment = std::move(comment);
+}
+
+void find::cursor_type(cursor::type cursor_type) {
+    _cursor_type = cursor_type;
+}
+
+void find::hint(class hint index_hint) {
+    _hint = std::move(index_hint);
 }
 
 void find::limit(std::int32_t limit) {
     _limit = limit;
 }
 
-void find::max_time_ms(std::int64_t max_time_ms) {
-    _max_time_ms = max_time_ms;
+void find::max_await_time(std::chrono::milliseconds max_await_time) {
+    _max_await_time = std::move(max_await_time);
 }
 
-void find::modifiers(bsoncxx::document::view modifiers) {
-    _modifiers = modifiers;
+void find::max_time(std::chrono::milliseconds max_time) {
+    _max_time = std::move(max_time);
+}
+
+void find::modifiers(bsoncxx::document::view_or_value modifiers) {
+    _modifiers = std::move(modifiers);
 }
 
 void find::no_cursor_timeout(bool no_cursor_timeout) {
     _no_cursor_timeout = no_cursor_timeout;
 }
 
-void find::oplog_replay(bool oplog_replay) {
-    _oplog_replay = oplog_replay;
-}
-
-void find::projection(bsoncxx::document::view projection) {
-    _projection = projection;
+void find::projection(bsoncxx::document::view_or_value projection) {
+    _projection = std::move(projection);
 }
 
 void find::read_preference(class read_preference rp) {
@@ -65,56 +74,66 @@ void find::skip(std::int32_t skip) {
     _skip = skip;
 }
 
-void find::sort(bsoncxx::document::view ordering) {
-    _ordering = ordering;
+void find::sort(bsoncxx::document::view_or_value ordering) {
+    _ordering = std::move(ordering);
 }
 
-const bsoncxx::stdx::optional<bool>& find::allow_partial_results() const {
+const stdx::optional<bool>& find::allow_partial_results() const {
     return _allow_partial_results;
 }
 
-const bsoncxx::stdx::optional<std::int32_t>& find::batch_size() const {
+const stdx::optional<std::int32_t>& find::batch_size() const {
     return _batch_size;
 }
 
-const bsoncxx::stdx::optional<std::int32_t>& find::limit() const {
+const stdx::optional<bsoncxx::string::view_or_value>& find::comment() const {
+    return _comment;
+}
+
+const stdx::optional<cursor::type>& find::cursor_type() const {
+    return _cursor_type;
+}
+
+const stdx::optional<class hint>& find::hint() const {
+    return _hint;
+}
+
+const stdx::optional<std::int32_t>& find::limit() const {
     return _limit;
 }
 
-const bsoncxx::stdx::optional<std::int64_t>& find::max_time_ms() const {
-    return _max_time_ms;
+const stdx::optional<std::chrono::milliseconds>& find::max_await_time() const {
+    return _max_await_time;
 }
 
-const bsoncxx::stdx::optional<bsoncxx::document::view>& find::modifiers() const {
+const stdx::optional<std::chrono::milliseconds>& find::max_time() const {
+    return _max_time;
+}
+
+const stdx::optional<bsoncxx::document::view_or_value>& find::modifiers() const {
     return _modifiers;
 }
 
-const bsoncxx::stdx::optional<bool>& find::no_cursor_timeout() const {
+const stdx::optional<bool>& find::no_cursor_timeout() const {
     return _no_cursor_timeout;
 }
 
-const bsoncxx::stdx::optional<bool>& find::oplog_replay() const {
-    return _oplog_replay;
-}
-
-const bsoncxx::stdx::optional<bsoncxx::document::view>& find::projection() const {
+const stdx::optional<bsoncxx::document::view_or_value>& find::projection() const {
     return _projection;
 }
 
-const bsoncxx::stdx::optional<std::int32_t>& find::skip() const {
+const stdx::optional<std::int32_t>& find::skip() const {
     return _skip;
 }
 
-const bsoncxx::stdx::optional<bsoncxx::document::view>& find::sort() const {
+const stdx::optional<bsoncxx::document::view_or_value>& find::sort() const {
     return _ordering;
 }
 
-const bsoncxx::stdx::optional<class read_preference>& find::read_preference() const {
+const stdx::optional<class read_preference>& find::read_preference() const {
     return _read_preference;
 }
 
 }  // namespace options
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

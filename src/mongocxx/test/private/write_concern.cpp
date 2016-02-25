@@ -15,7 +15,7 @@
 #include "catch.hpp"
 
 #include <mongocxx/private/libmongoc.hpp>
-
+#include <mongocxx/instance.hpp>
 #include <mongocxx/write_concern.hpp>
 #include <mongocxx/private/write_concern.hpp>
 
@@ -23,26 +23,13 @@ using namespace mongocxx;
 
 TEST_CASE("creation of write_concern passes universal parameters to c-driver's methods",
           "[write_concern][base][c-driver]") {
-    SECTION("when fsync is requested, mongoc_write_concern_set_fsync is called with true") {
-        bool fsync_called = false;
-        bool fsync_value = false;
-        auto mock_instance = libmongoc::write_concern_set_fsync.create_instance();
-        mock_instance->visit([&](mongoc_write_concern_t* wc, bool fsync) {
-            fsync_called = true;
-            fsync_value = fsync;
-        });
-        write_concern wc{};
-        wc.fsync(true);
-        write_concern{wc};
-        REQUIRE(fsync_called == true);
-        REQUIRE(fsync_value == true);
-    }
+    instance::current();
 
     SECTION("when journal is requested, mongoc_write_concern_set_journal is called with true") {
         bool journal_called = false;
         bool journal_value = false;
         auto mock_instance = libmongoc::write_concern_set_journal.create_instance();
-        mock_instance->visit([&](mongoc_write_concern_t* wc, bool journal) {
+        mock_instance->visit([&](mongoc_write_concern_t*, bool journal) {
             journal_called = true;
             journal_value = journal;
         });
@@ -57,7 +44,7 @@ TEST_CASE("creation of write_concern passes universal parameters to c-driver's m
         bool wtimeout_called = false;
         int wtimeout_value = 0;
         auto mock_instance = libmongoc::write_concern_set_wtimeout.create_instance();
-        mock_instance->visit([&](mongoc_write_concern_t* wc, int wtimeout) {
+        mock_instance->visit([&](mongoc_write_concern_t*, int wtimeout) {
             wtimeout_called = true;
             wtimeout_value = wtimeout;
         });
@@ -70,14 +57,15 @@ TEST_CASE("creation of write_concern passes universal parameters to c-driver's m
 }
 
 TEST_CASE("write_concern is called with w MAJORITY", "[write_concern][base][c-driver]") {
+    instance::current();
+
     bool w_called = false, wmajority_called = false, wtag_called = false;
     auto w_instance = libmongoc::write_concern_set_w.create_instance();
     auto wmajority_instance = libmongoc::write_concern_set_wmajority.create_instance();
     auto wtag_instance = libmongoc::write_concern_set_wtag.create_instance();
-    w_instance->visit([&](mongoc_write_concern_t* wc, int w) { w_called = true; });
-    wmajority_instance->visit(
-        [&](mongoc_write_concern_t* wc, int wtimout) { wmajority_called = true; });
-    wtag_instance->visit([&](mongoc_write_concern_t* wc, const char* wtag) { wtag_called = true; });
+    w_instance->visit([&](mongoc_write_concern_t*, int) { w_called = true; });
+    wmajority_instance->visit([&](mongoc_write_concern_t*, int) { wmajority_called = true; });
+    wtag_instance->visit([&](mongoc_write_concern_t*, const char*) { wtag_called = true; });
 
     write_concern wc{};
     wc.majority(std::chrono::milliseconds(100));
@@ -98,19 +86,20 @@ TEST_CASE("write_concern is called with w MAJORITY", "[write_concern][base][c-dr
 
 TEST_CASE("write_concern is called with a number of necessary confirmations",
           "[write_concern][base][c-driver]") {
+    instance::current();
+
     bool w_called = false, wmajority_called = false, wtag_called = false;
     int w_value = 0;
     const int expected_w = 5;
     auto w_instance = libmongoc::write_concern_set_w.create_instance();
     auto wmajority_instance = libmongoc::write_concern_set_wmajority.create_instance();
     auto wtag_instance = libmongoc::write_concern_set_wtag.create_instance();
-    w_instance->visit([&](mongoc_write_concern_t* wc, int w) {
+    w_instance->visit([&](mongoc_write_concern_t*, int w) {
         w_called = true;
         w_value = w;
     });
-    wmajority_instance->visit(
-        [&](mongoc_write_concern_t* wc, int wtimout) { wmajority_called = true; });
-    wtag_instance->visit([&](mongoc_write_concern_t* wc, const char* wtag) { wtag_called = true; });
+    wmajority_instance->visit([&](mongoc_write_concern_t*, int) { wmajority_called = true; });
+    wtag_instance->visit([&](mongoc_write_concern_t*, const char*) { wtag_called = true; });
 
     write_concern wc{};
     wc.nodes(expected_w);
@@ -131,16 +120,17 @@ TEST_CASE("write_concern is called with a number of necessary confirmations",
 }
 
 TEST_CASE("write_concern is called with a tag", "[write_concern][base][c-driver]") {
+    instance::current();
+
     bool w_called = false, wmajority_called = false, wtag_called = false;
     std::string wtag_value;
     const std::string expected_wtag("MultiDataCenter");
     auto w_instance = libmongoc::write_concern_set_w.create_instance();
     auto wmajority_instance = libmongoc::write_concern_set_wmajority.create_instance();
     auto wtag_instance = libmongoc::write_concern_set_wtag.create_instance();
-    w_instance->visit([&](mongoc_write_concern_t* wc, int w) { w_called = true; });
-    wmajority_instance->visit(
-        [&](mongoc_write_concern_t* wc, int wtimout) { wmajority_called = true; });
-    wtag_instance->visit([&](mongoc_write_concern_t* wc, const char* wtag) {
+    w_instance->visit([&](mongoc_write_concern_t*, int) { w_called = true; });
+    wmajority_instance->visit([&](mongoc_write_concern_t*, int) { wmajority_called = true; });
+    wtag_instance->visit([&](mongoc_write_concern_t*, const char* wtag) {
         wtag_called = true;
         wtag_value = wtag;
     });

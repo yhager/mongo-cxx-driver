@@ -14,16 +14,18 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <memory>
 #include <string>
 
-#include <bsoncxx/stdx/string_view.hpp>
-
+#include <bsoncxx/document/view_or_value.hpp>
+#include <bsoncxx/string/view_or_value.hpp>
 #include <mongocxx/collection.hpp>
+#include <mongocxx/options/modify_collection.hpp>
+#include <mongocxx/options/create_collection.hpp>
 #include <mongocxx/write_concern.hpp>
 #include <mongocxx/read_preference.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -36,13 +38,16 @@ class client;
 /// Acts as a gateway for accessing collections that are contained within a database. It inherits
 /// all of its default settings from the client that creates it.
 ///
-/// @todo Make iterable for collections in the database
-/// @todo Make copyable when c-driver supports this
 /// @todo Add auth functions (add_user, remove_all_users, remove_user)
-
+///
 class MONGOCXX_API database {
-
    public:
+    ///
+    /// Default constructs a new database. The database is not valid for use and is equivalent
+    /// to the state of a moved-from database. The only valid actions to take with a default
+    /// constructed database are to assign to it, or destroy it.
+    ///
+    database() noexcept;
 
     ///
     /// Move constructs a database.
@@ -55,9 +60,25 @@ class MONGOCXX_API database {
     database& operator=(database&&) noexcept;
 
     ///
+    /// Copy constructs a database.
+    ///
+    database(const database&);
+
+    ///
+    /// Copy assigns a database.
+    ///
+    database& operator=(const database&);
+
+    ///
     /// Destroys a database.
     ///
     ~database();
+
+    ///
+    /// Returns true if the client is valid, meaning it was not default constructed
+    /// or moved from.
+    ///
+    explicit operator bool() const noexcept;
 
     ///
     /// Runs a command against this database.
@@ -68,7 +89,7 @@ class MONGOCXX_API database {
     /// @return the result of executing the command.
     /// @throws exception::operation if the operation fails.
     ///
-    bsoncxx::document::value command(bsoncxx::document::view command);
+    bsoncxx::document::value run_command(bsoncxx::document::view_or_value command);
 
     ///
     /// Explicitly creates a collection in this database with the specified options.
@@ -79,9 +100,22 @@ class MONGOCXX_API database {
     /// @param options the options for the new collection.
     ///
     class collection create_collection(
-        bsoncxx::stdx::string_view name,
-        bsoncxx::document::view options
-    );
+        bsoncxx::string::view_or_value name,
+        const options::create_collection& options = options::create_collection());
+
+    ///
+    /// Modify an existing collection.
+    ///
+    /// @see https://docs.mongodb.org/manual/reference/command/collMod/
+    ///
+    /// @param name the name of the collection to be modified.
+    /// @param options the modifications to be performed.
+    ///
+    /// @return the result of executing the command.
+    ///
+    bsoncxx::document::value modify_collection(
+        stdx::string_view name,
+        const options::modify_collection& options = options::modify_collection());
 
     ///
     /// Drops the database and all its collections.
@@ -96,19 +130,7 @@ class MONGOCXX_API database {
     /// @param name the name of the collection.
     /// @return bool whether the collection exists in this database.
     ///
-    bool has_collection(bsoncxx::stdx::string_view name);
-
-    ///
-    /// Gets a handle to the underlying implementation.
-    ///
-    /// Returned pointer is only valid for the lifetime of this object.
-    ///
-    /// @deprecated Future versions of the driver reserve the right to change the implementation
-    ///   and remove this interface entirely.
-    ///
-    /// @return Pointer to implementation of this object, or nullptr if not available.
-    ///
-    MONGOCXX_DEPRECATED void* implementation() const;
+    bool has_collection(bsoncxx::string::view_or_value name) const;
 
     ///
     /// Enumerates the collections in this database.
@@ -123,25 +145,14 @@ class MONGOCXX_API database {
     ///
     /// @see http://docs.mongodb.org/manual/reference/command/listCollections/
     ///
-    cursor list_collections(bsoncxx::document::view filter);
+    cursor list_collections(bsoncxx::document::view_or_value filter = {});
 
     ///
     /// Get the name of this database.
     ///
     /// @return the name of this database.
     ///
-    bsoncxx::stdx::string_view name() const;
-
-    ///
-    /// Renames this database.
-    ///
-    /// @param new_name the new name for the database.
-    /// @param drop_target_before_rename whether to drop existing databases with the new name.
-    ///
-    void rename(
-        bsoncxx::stdx::string_view new_name,
-        bool drop_target_before_rename
-    );
+    stdx::string_view name() const;
 
     ///
     /// Get server-side statistics for the database.
@@ -153,9 +164,33 @@ class MONGOCXX_API database {
     bsoncxx::document::value stats();
 
     ///
+    /// Sets the read_concern for this database.
+    ///
+    /// @note Modifications at this level do not affect existing collection instances that have come
+    /// from this database, but do affect new ones. New collections will receive a copy of the
+    /// new read_concern for this database upon instantiation.
+    ///
+    /// @param rc
+    ///   The new @c read_concern
+    ///
+    /// @see https://docs.mongodb.org/manual/reference/read-concern/
+    ///
+    void read_concern(class read_concern rc);
+
+    ///
+    /// The current read concern for this database.
+    ///
+    /// If the read_concern is not explicitly set on this database object, it inherits the
+    /// read_concern from its parent client object.
+    ///
+    /// @return the current read_concern
+    ///
+    class read_concern read_concern() const;
+
+    ///
     /// Sets the read_preference for this database.
     ///
-    /// @note Modifications at this level do not effect existing collection instances that have come
+    /// @note Modifications at this level do not affect existing collection instances that have come
     /// from this database, but do affect new ones. New collections will receive a copy of the
     /// new read_preference for this database upon instantiation.
     ///
@@ -177,8 +212,8 @@ class MONGOCXX_API database {
     ///
     /// Sets the write_concern for this database.
     ///
-    /// @note Modifications at this level do not effect existing collection instances that have come
-    /// from this database, but do effect new ones as new collections will receive a copy of the
+    /// @note Modifications at this level do not affect existing collection instances that have come
+    /// from this database, but do affect new ones as new collections will receive a copy of the
     /// write_concern of this database upon instantiation.
     ///
     void write_concern(class write_concern wc);
@@ -197,29 +232,33 @@ class MONGOCXX_API database {
     ///
     /// @return the collection.
     ///
-    class collection collection(bsoncxx::stdx::string_view name) const;
+    class collection collection(bsoncxx::string::view_or_value name) const;
 
     ///
-    /// Allows the db["collection_name"] syntax to be used to access a collection within this database.
+    /// Allows the db["collection_name"] syntax to be used to access a collection within this
+    /// database.
     ///
     /// @param name the name of the collection to get.
     ///
     /// @return the collection.
     ///
-    MONGOCXX_INLINE class collection operator[](bsoncxx::stdx::string_view name) const;
+    MONGOCXX_INLINE class collection operator[](bsoncxx::string::view_or_value name) const;
 
    private:
     friend class client;
     friend class collection;
 
-    database(const class client& client, bsoncxx::stdx::string_view name);
+    MONGOCXX_PRIVATE database(const class client& client, bsoncxx::string::view_or_value name);
 
     class MONGOCXX_PRIVATE impl;
-    std::unique_ptr<impl> _impl;
 
+    MONGOCXX_PRIVATE impl& _get_impl();
+    MONGOCXX_PRIVATE const impl& _get_impl() const;
+
+    std::unique_ptr<impl> _impl;
 };
 
-MONGOCXX_INLINE collection database::operator[](bsoncxx::stdx::string_view name) const {
+MONGOCXX_INLINE collection database::operator[](bsoncxx::string::view_or_value name) const {
     return collection(name);
 }
 

@@ -16,6 +16,9 @@
 
 #include <bsoncxx/stdx/make_unique.hpp>
 #include <mongocxx/private/pipeline.hpp>
+#include <mongocxx/stdx.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -23,15 +26,15 @@ MONGOCXX_INLINE_NAMESPACE_BEGIN
 using namespace bsoncxx::builder::stream;
 using namespace bsoncxx::types;
 
-pipeline::pipeline() : _impl(bsoncxx::stdx::make_unique<impl>()) {
+pipeline::pipeline() : _impl(stdx::make_unique<impl>()) {
 }
 
 pipeline::pipeline(pipeline&&) noexcept = default;
 pipeline& pipeline::operator=(pipeline&&) noexcept = default;
 pipeline::~pipeline() = default;
 
-pipeline& pipeline::group(bsoncxx::document::view group) {
-    _impl->sink() << open_document << "$group" << b_document{group} << close_document;
+pipeline& pipeline::group(bsoncxx::document::view_or_value group) {
+    _impl->sink() << open_document << "$group" << b_document{std::move(group)} << close_document;
     return *this;
 }
 
@@ -40,8 +43,8 @@ pipeline& pipeline::limit(std::int32_t limit) {
     return *this;
 }
 
-pipeline& pipeline::match(bsoncxx::document::view criteria) {
-    _impl->sink() << open_document << "$match" << b_document{criteria} << close_document;
+pipeline& pipeline::match(bsoncxx::document::view_or_value criteria) {
+    _impl->sink() << open_document << "$match" << b_document{std::move(criteria)} << close_document;
     return *this;
 }
 
@@ -50,13 +53,21 @@ pipeline& pipeline::out(std::string collection_name) {
     return *this;
 }
 
-pipeline& pipeline::project(bsoncxx::document::view projection) {
-    _impl->sink() << open_document << "$project" << b_document{projection} << close_document;
+pipeline& pipeline::project(bsoncxx::document::view_or_value projection) {
+    _impl->sink() << open_document << "$project" << b_document{std::move(projection)}
+                  << close_document;
     return *this;
 }
 
-pipeline& pipeline::redact(bsoncxx::document::view restrictions) {
-    _impl->sink() << open_document << "$redact" << b_document{restrictions} << close_document;
+pipeline& pipeline::redact(bsoncxx::document::view_or_value restrictions) {
+    _impl->sink() << open_document << "$redact" << b_document{std::move(restrictions)}
+                  << close_document;
+    return *this;
+}
+
+pipeline& pipeline::sample(std::int32_t size) {
+    _impl->sink() << open_document << "$sample" << open_document << "size" << size << close_document
+                  << close_document;
     return *this;
 }
 
@@ -65,8 +76,8 @@ pipeline& pipeline::skip(std::int32_t skip) {
     return *this;
 }
 
-pipeline& pipeline::sort(bsoncxx::document::view sort) {
-    _impl->sink() << open_document << "$sort" << b_document{sort} << close_document;
+pipeline& pipeline::sort(bsoncxx::document::view_or_value sort) {
+    _impl->sink() << open_document << "$sort" << b_document{std::move(sort)} << close_document;
     return *this;
 }
 
@@ -115,5 +126,3 @@ bsoncxx::document::view pipeline::view() const {
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

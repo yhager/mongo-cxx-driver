@@ -14,16 +14,20 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-#include <mongocxx/result/bulk_write.hpp>
-
 #include <cstdint>
 #include <map>
 
 #include <bsoncxx/types.hpp>
+#include <mongocxx/result/bulk_write.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
+
+class collection;
+class insert_many_builder;
+
 namespace result {
 
 ///
@@ -31,14 +35,8 @@ namespace result {
 /// (executed as a bulk write).
 ///
 class MONGOCXX_API insert_many {
-
    public:
-    // TODO: public alias the map
-    // This constructor is public for testing purposes only
-    insert_many(
-        result::bulk_write result,
-        std::map<std::size_t, bsoncxx::document::element> inserted_ids
-    );
+    using id_map = std::map<std::size_t, bsoncxx::document::element>;
 
     ///
     /// Returns the bulk write result for this insert many operation.
@@ -52,20 +50,24 @@ class MONGOCXX_API insert_many {
     ///
     /// @return The number of documents that were inserted.
     ///
-    std::int64_t inserted_count() const;
+    std::int32_t inserted_count() const;
 
     ///
     /// Gets the _ids of the inserted documents.
     ///
     /// @return The values of the _id field for inserted documents.
     ///
-    std::map<std::size_t, bsoncxx::document::element> inserted_ids();
+    id_map inserted_ids();
 
    private:
-    result::bulk_write _result;
-    std::map<std::size_t, bsoncxx::document::element> _generated_ids;
+    friend collection;
+    friend insert_many_builder;
 
-}; // class insert_many
+    MONGOCXX_PRIVATE insert_many(result::bulk_write result, id_map inserted_ids);
+
+    result::bulk_write _result;
+    id_map _generated_ids;
+};
 
 }  // namespace result
 MONGOCXX_INLINE_NAMESPACE_END

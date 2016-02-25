@@ -23,12 +23,15 @@
 #include <bson.h>
 
 #include <bsoncxx/document/view.hpp>
+#include <bsoncxx/exception/error_code.hpp>
+#include <bsoncxx/exception/exception.hpp>
+#include <bsoncxx/private/b64_ntop.h>
 #include <bsoncxx/stdx/make_unique.hpp>
 #include <bsoncxx/stdx/string_view.hpp>
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 
-#include <bsoncxx/b64_ntop.h>
+#include <bsoncxx/config/private/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -49,7 +52,7 @@ class json_visitor {
         pad();
 
         if (!stack.back()) {
-            out << "\"" << value.data() << "\""
+            out << "\"" << value.to_string().data() << "\""
                 << " : ";
         }
     }
@@ -62,7 +65,7 @@ class json_visitor {
     }
 
     void visit_value(const types::b_utf8& value) {
-        out << "\"" << value.value.data() << "\"";
+        out << "\"" << value.value.to_string().data() << "\"";
     }
 
     void visit_value(const types::b_document& value) {
@@ -108,7 +111,7 @@ class json_visitor {
     void visit_value(const types::b_oid& value) {
         out << "{" << std::endl;
         pad(1);
-        out << "\"$oid\" : \"" << value.value << "\"" << std::endl;
+        out << "\"$oid\" : \"" << value.value.to_string() << "\"" << std::endl;
         pad();
         out << "}";
     }
@@ -128,9 +131,9 @@ class json_visitor {
     void visit_value(const types::b_regex& value) {
         out << "{" << std::endl;
         pad(1);
-        out << "\"$regex\" : \"" << value.regex.data() << "\"," << std::endl;
+        out << "\"$regex\" : \"" << value.regex.to_string().data() << "\"," << std::endl;
         pad(1);
-        out << "\"$options\" : \"" << value.options.data() << "\"" << std::endl;
+        out << "\"$options\" : \"" << value.options.to_string().data() << "\"" << std::endl;
         pad();
         out << "}";
     }
@@ -138,7 +141,7 @@ class json_visitor {
     void visit_value(const types::b_dbpointer& value) {
         out << "{" << std::endl;
         pad(1);
-        out << "\"$ref\" : \"" << value.collection.data() << "\"";
+        out << "\"$ref\" : \"" << value.collection.to_string().data() << "\"";
 
         if (value.value) {
             out << "," << std::endl;
@@ -151,15 +154,15 @@ class json_visitor {
     }
 
     void visit_value(const types::b_code& value) {
-        out << value.code.data();
+        out << value.code.to_string().data();
     }
 
     void visit_value(const types::b_symbol& value) {
-        out << value.symbol.data();
+        out << value.symbol.to_string().data();
     }
 
     void visit_value(const types::b_codewscope& value) {
-        out << value.code.data();
+        out << value.code.to_string().data();
     }
 
     void visit_value(const types::b_int32& value) {
@@ -284,13 +287,12 @@ std::string to_json(types::value value) {
     return ss.str();
 }
 
-stdx::optional<document::value> from_json(stdx::string_view json) {
+document::value from_json(stdx::string_view json) {
     bson_error_t error;
-    bson_t* result = bson_new_from_json(
-        reinterpret_cast<const uint8_t*>(json.data()), json.size(), &error);
+    bson_t* result =
+        bson_new_from_json(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &error);
 
-    if (!result)
-        return stdx::nullopt;
+    if (!result) throw exception(error_code::k_json_parse_failure, error.message);
 
     std::uint32_t length;
     std::uint8_t* buf = bson_destroy_with_steal(result, true, &length);

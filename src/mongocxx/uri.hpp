@@ -14,17 +14,17 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <memory>
 #include <string>
 #include <vector>
 
 #include <bsoncxx/document/view.hpp>
-#include <bsoncxx/stdx/string_view.hpp>
-
+#include <bsoncxx/string/view_or_value.hpp>
+#include <mongocxx/read_concern.hpp>
 #include <mongocxx/read_preference.hpp>
 #include <mongocxx/write_concern.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -32,19 +32,17 @@ MONGOCXX_INLINE_NAMESPACE_BEGIN
 ///
 /// Class representing a MongoDB connection string URI.
 ///
-/// @todo: return const char* instead or stringview
-/// @todo: harmonize with C library (options, credentials, etc...)
+/// @todo return const char* instead or stringview
+/// @todo harmonize with C library (options, credentials, etc...)
 ///
 /// @see http://docs.mongodb.org/manual/reference/connection-string/
 ///
 class MONGOCXX_API uri {
-
    public:
-
     struct host {
-         std::string host;
-         std::uint16_t port;
-         std::int32_t family;
+        std::string name;
+        std::uint16_t port;
+        std::int32_t family;
     };
 
     static const std::string k_default_uri;
@@ -56,9 +54,7 @@ class MONGOCXX_API uri {
     /// @param uri_string
     ///   String representing a MongoDB connection string uri, defaults to k_default_uri.
     ///
-    /// @todo this should really take a stringview (polyfilled)?
-    ///
-    uri(bsoncxx::stdx::string_view uri_string = k_default_uri);
+    uri(bsoncxx::string::view_or_value uri_string = k_default_uri);
 
     ///
     /// Move constructs a uri.
@@ -104,18 +100,6 @@ class MONGOCXX_API uri {
     std::string database() const;
 
     ///
-    /// Gets a handle to the underlying implementation.
-    ///
-    /// Returned pointer is only valid for the lifetime of this object.
-    ///
-    /// @deprecated Future versions of the driver reserve the right to change the implementation
-    ///   and remove this interface entirely.
-    ///
-    /// @return Pointer to implementation of this object, or nullptr if not available.
-    ///
-    MONGOCXX_DEPRECATED void* implementation() const;
-
-    ///
     /// Returns other uri options.
     ///
     /// @return A document view containing other options.
@@ -128,6 +112,13 @@ class MONGOCXX_API uri {
     /// @return A string containing the supplied password.
     ///
     std::string password() const;
+
+    ///
+    /// Returns the read concern from the uri.
+    ///
+    /// @return A read_concern that represents what was specified in the uri.
+    ///
+    class read_concern read_concern() const;
 
     ///
     /// Returns the read preference from the uri.
@@ -177,7 +168,7 @@ class MONGOCXX_API uri {
 
     class MONGOCXX_PRIVATE impl;
 
-    uri(std::unique_ptr<impl>&& implementation);
+    MONGOCXX_PRIVATE uri(std::unique_ptr<impl>&& implementation);
 
     std::unique_ptr<impl> _impl;
 };

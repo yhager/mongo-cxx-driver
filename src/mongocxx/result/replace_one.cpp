@@ -14,6 +14,8 @@
 
 #include <mongocxx/result/replace_one.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace result {
@@ -25,20 +27,21 @@ const result::bulk_write& replace_one::result() const {
     return _result;
 }
 
-std::int64_t replace_one::matched_count() const {
+std::int32_t replace_one::matched_count() const {
     return _result.matched_count();
 }
 
-std::int64_t replace_one::modified_count() const {
+std::int32_t replace_one::modified_count() const {
     return _result.modified_count();
 }
 
-bsoncxx::stdx::optional<bsoncxx::document::element> replace_one::upserted_id() const {
-    return _result.upserted_ids();
+stdx::optional<bsoncxx::document::element> replace_one::upserted_id() const {
+    if (_result.upserted_ids().size() == 0) {
+        return stdx::nullopt;
+    }
+    return _result.upserted_ids()[0];
 }
 
 }  // namespace result
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

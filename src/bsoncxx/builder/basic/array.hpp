@@ -14,14 +14,14 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <bsoncxx/array/value.hpp>
 #include <bsoncxx/array/view.hpp>
 #include <bsoncxx/builder/basic/impl.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/builder/basic/sub_array.hpp>
 #include <bsoncxx/builder/core.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -32,9 +32,12 @@ namespace basic {
 /// A traditional builder-style interface for constructing
 /// a BSON array.
 ///
-class BSONCXX_API array : public sub_array {
+class array : public sub_array {
    public:
-    array() : sub_array(&_core), _core(true) {
+    ///
+    /// Default constructor
+    ///
+    BSONCXX_INLINE array() : sub_array(&_core), _core(true) {
     }
 
     ///
@@ -44,6 +47,12 @@ class BSONCXX_API array : public sub_array {
         return _core.view_array();
     }
 
+    ///
+    /// Conversion operator that provides a view of the current builder
+    /// contents.
+    ///
+    /// @return A view of the current builder contents.
+    ///
     BSONCXX_INLINE operator bsoncxx::array::view() const {
         return view();
     }

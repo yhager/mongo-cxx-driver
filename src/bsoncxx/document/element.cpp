@@ -12,44 +12,70 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <bsoncxx/document/element.hpp>
+
 #include <cstdlib>
 #include <cstring>
 
 #include <bson.h>
 
-#include <bsoncxx/document/element.hpp>
+#include <bsoncxx/exception/error_code.hpp>
+#include <bsoncxx/exception/exception.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 
-#define CITER               \
-    bson_iter_t iter;       \
-    iter.raw = raw;         \
-    iter.len = length;      \
-    iter.next_off = offset; \
+#include <bsoncxx/config/private/prelude.hpp>
+
+#define CITER                \
+    bson_iter_t iter;        \
+    iter.raw = _raw;         \
+    iter.len = _length;      \
+    iter.next_off = _offset; \
     bson_iter_next(&iter)
 
-#define BSONCXX_TYPE_CHECK(name)                            \
-    do {                                                    \
-        if (type() != bsoncxx::type::name) {                \
-            throw std::runtime_error("type is not " #name); \
-        }                                                   \
+#define BSONCXX_TYPE_CHECK(name)                                              \
+    do {                                                                      \
+        if (type() != bsoncxx::type::name) {                                  \
+            throw bsoncxx::exception{error_code::k_need_element_type_##name}; \
+        }                                                                     \
     } while (0)
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
 namespace document {
 
-element::element() : raw(nullptr), length(0), offset(0) {
+element::element() : _raw(nullptr), _length(0), _offset(0) {
 }
 
 element::element(const std::uint8_t* raw, std::uint32_t length, std::uint32_t offset)
-    : raw(raw), length(length), offset(offset) {
+    : _raw(raw), _length(length), _offset(offset) {
+}
+
+const std::uint8_t* element::raw() const {
+    return _raw;
+}
+void element::raw(const std::uint8_t* raw) {
+    _raw = raw;
+}
+
+std::uint32_t element::length() const {
+    return _length;
+}
+void element::length(std::uint32_t length) {
+    _length = length;
+}
+
+std::uint32_t element::offset() const {
+    return _offset;
+}
+void element::offset(std::uint32_t offset) {
+    _offset = offset;
 }
 
 bsoncxx::type element::type() const {
-    if (raw == nullptr) {
-        throw std::runtime_error("unset element");
+    if (_raw == nullptr) {
+        throw bsoncxx::exception{error_code::k_unset_element};
     }
 
     CITER;
@@ -57,8 +83,8 @@ bsoncxx::type element::type() const {
 }
 
 stdx::string_view element::key() const {
-    if (raw == nullptr) {
-        throw std::runtime_error("unset element");
+    if (_raw == nullptr) {
+        throw bsoncxx::exception{error_code::k_unset_element};
     }
 
     CITER;
@@ -247,12 +273,21 @@ types::value element::get_value() const {
 #undef BSONCXX_ENUM
     }
 
-    // TODO shouldn't be reachable.  replace with macro unreachable
-    std::abort();
+    BSONCXX_UNREACHABLE;
+}
+
+element element::operator[](stdx::string_view key) const {
+    document::view doc = get_document();
+    return doc[key];
+}
+
+array::element element::operator[](std::uint32_t i) const {
+    array::view arr = get_array();
+    return arr[i];
 }
 
 element::operator bool() const {
-    return raw != nullptr;
+    return _raw != nullptr;
 }
 
 }  // namespace document

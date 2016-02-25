@@ -14,12 +14,12 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <memory>
 
 #include <bsoncxx/stdx/string_view.hpp>
 #include <mongocxx/stdx.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -58,6 +58,9 @@ class MONGOCXX_API logger {
                             stdx::string_view message) noexcept = 0;
 
    protected:
+    ///
+    /// Default constructor
+    ///
     logger();
 };
 

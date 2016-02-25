@@ -14,14 +14,14 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <bsoncxx/builder/basic/impl.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/builder/basic/sub_document.hpp>
 #include <bsoncxx/builder/core.hpp>
 #include <bsoncxx/document/value.hpp>
 #include <bsoncxx/document/view.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -34,9 +34,9 @@ class array;
 /// A traditional builder-style interface for constructing
 /// a BSON document.
 ///
-class BSONCXX_API document : public sub_document {
+class document : public sub_document {
    public:
-    document() : sub_document(&_core), _core(false) {
+    BSONCXX_INLINE document() : sub_document(&_core), _core(false) {
     }
 
     ///
@@ -46,6 +46,12 @@ class BSONCXX_API document : public sub_document {
         return _core.view_document();
     }
 
+    ///
+    /// Conversion operator that provides a view of the current builder
+    /// contents.
+    ///
+    /// @return A view of the current builder contents.
+    ///
     BSONCXX_INLINE operator bsoncxx::document::view() const {
         return view();
     }

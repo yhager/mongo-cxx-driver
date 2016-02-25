@@ -14,29 +14,28 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <mongocxx/client.hpp>
-
-#include <mongoc.h>
-
+#include <mongocxx/private/libmongoc.hpp>
 #include <mongocxx/private/write_concern.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class client::impl {
-
    public:
-    impl(mongoc_client_t* client) : client_t(client) {}
+    impl(mongoc_client_t* client) : client_t(client) {
+    }
 
-    ~impl() { libmongoc::client_destroy(client_t); }
+    ~impl() {
+        libmongoc::client_destroy(client_t);
+    }
 
     mongoc_client_t* client_t;
-
-}; // class impl
+};
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

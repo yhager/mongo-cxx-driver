@@ -14,14 +14,15 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <bson.h>
 
 #include <bsoncxx/document/value.hpp>
 #include <bsoncxx/document/view.hpp>
-
+#include <bsoncxx/document/view_or_value.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+#include <mongocxx/stdx.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -46,40 +47,39 @@ namespace libbson {
 /// instead.
 ///
 class scoped_bson_t {
-
    public:
     ///
-    /// Constructs a new scoped_bson_t having a non-initialized interal bson_t.
+    /// Constructs a new scoped_bson_t having a non-initialized internal bson_t.
     ///
     scoped_bson_t();
 
     ///
-    /// Constructs a new scoped_bson_t from an optional document view.
-    ///
-    /// If the optional argument is engaged the internal bson_t is considered initialized.
-    ///
-    scoped_bson_t(const bsoncxx::stdx::optional<bsoncxx::document::view>& doc);
-
-    ///
-    /// Constructs a new scoped_bson_t from a document view.
+    /// Constructs a new scoped_bson_t from a document view_or_value.
     ///
     /// The internal bson_t is considered initialized.
     ///
-    scoped_bson_t(const bsoncxx::document::view& doc);
+    explicit scoped_bson_t(bsoncxx::document::view_or_value doc);
 
     ///
-    /// Constructs a read-only bson_t from the document::view argument if one is provided.
+    /// Constructs a new scoped_bson_t from an optional document view_or_value.
     ///
-    /// If the optional argument is engaged the internal bson_t is considered initialized.
+    /// The internal bson_t is initialized if the optional is populated.
     ///
-    void init_from_static(const bsoncxx::stdx::optional<bsoncxx::document::view>& doc);
+    scoped_bson_t(bsoncxx::stdx::optional<bsoncxx::document::view_or_value> doc);
 
     ///
-    /// Constructs a read-only bson_t from the provided document.
+    /// Initializes a bson_t from the provided document.
     ///
     /// The internal bson_t is considered initialized.
     ///
-    void init_from_static(const bsoncxx::document::view& doc);
+    void init_from_static(bsoncxx::document::view_or_value doc);
+
+    ///
+    /// Initializes a bson_t from the provided optional document.
+    ///
+    /// The internal bson_t is initialized if the optional is populated.
+    ///
+    void init_from_static(bsoncxx::stdx::optional<bsoncxx::document::view_or_value> doc);
 
     ///
     /// Initialize the internal bson_t.
@@ -116,8 +116,13 @@ class scoped_bson_t {
    private:
     bson_t _bson;
     bool _is_initialized;
+
+    // If we are passed a value created on-the-fly, we'll need to own this.
+    bsoncxx::stdx::optional<bsoncxx::document::view_or_value> _doc;
 };
 
 }  // namespace libbson
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
+
+#include <mongocxx/config/private/postlude.hpp>

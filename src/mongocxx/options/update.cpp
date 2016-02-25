@@ -14,6 +14,8 @@
 
 #include <mongocxx/options/update.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace options {
@@ -22,15 +24,23 @@ void update::upsert(bool upsert) {
     _upsert = upsert;
 }
 
+void update::bypass_document_validation(bool bypass_document_validation) {
+    _bypass_document_validation = bypass_document_validation;
+}
+
 void update::write_concern(class write_concern wc) {
     _write_concern = std::move(wc);
 }
 
-const bsoncxx::stdx::optional<bool>& update::upsert() const {
+const stdx::optional<bool>& update::upsert() const {
     return _upsert;
 }
 
-const bsoncxx::stdx::optional<class write_concern>& update::write_concern() const {
+const stdx::optional<bool>& update::bypass_document_validation() const {
+    return _bypass_document_validation;
+}
+
+const stdx::optional<class write_concern>& update::write_concern() const {
     return _write_concern;
 }
 

@@ -14,30 +14,27 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <mongocxx/bulk_write.hpp>
 #include <mongocxx/private/libmongoc.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class bulk_write::impl {
-
    public:
-    impl(mongoc_bulk_operation_t* op)
-        : operation_t(op)
-    {}
+    impl(mongoc_bulk_operation_t* op) : operation_t(op) {
+    }
 
     ~impl() {
         libmongoc::bulk_operation_destroy(operation_t);
     }
 
     mongoc_bulk_operation_t* operation_t;
-
-}; // class impl
+};
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

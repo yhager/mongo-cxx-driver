@@ -14,25 +14,31 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <mongocxx/database.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/private/client.hpp>
+#include <mongocxx/private/libmongoc.hpp>
 #include <mongocxx/private/write_concern.hpp>
 
-#include <mongoc.h>
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class database::impl {
    public:
-    impl(mongoc_database_t* db, const class client::impl* client, std::string name) :
-        database_t(db),
-        client_impl(client),
-        name(std::move(name))
-    {}
+    impl(mongoc_database_t* db, const class client::impl* client, std::string name)
+        : database_t(db), client_impl(client), name(std::move(name)) {
+    }
+
+    impl(const impl& i)
+        : database_t{libmongoc::database_copy(i.database_t)},
+          client_impl{i.client_impl},
+          name{i.name} {
+    }
+
+    // This method is deleted because we only use the copy constructor.
+    impl& operator=(const impl& i) = delete;
 
     ~impl() {
         libmongoc::database_destroy(database_t);
@@ -41,10 +47,9 @@ class database::impl {
     mongoc_database_t* database_t;
     const class client::impl* client_impl;
     std::string name;
-
 };
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

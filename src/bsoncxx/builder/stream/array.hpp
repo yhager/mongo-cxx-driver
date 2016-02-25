@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <bsoncxx/array/view.hpp>
 #include <bsoncxx/array/value.hpp>
 #include <bsoncxx/builder/core.hpp>
@@ -24,53 +22,62 @@
 #include <bsoncxx/builder/stream/single_context.hpp>
 #include <bsoncxx/builder/stream/value_context.hpp>
 
+#include <bsoncxx/config/prelude.hpp>
+
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
 namespace builder {
 namespace stream {
 
+///
+/// A streaming interface for constructing
+/// a BSON array.
+///
+class array : public array_context<> {
+   public:
     ///
-    /// A streaming interface for constructing
-    /// a BSON array.
+    /// Default constructor.
     ///
-    class array : public array_context<> {
-    public:
-        BSONCXX_INLINE array() : array_context<>(&_core), _core(true) {}
+    BSONCXX_INLINE array() : array_context<>(&_core), _core(true) {
+    }
 
-        ///
-        /// @return A view of the BSON array.
-        ///
-        BSONCXX_INLINE bsoncxx::array::view view() const {
-            return _core.view_array();
-        }
+    ///
+    /// @return A view of the BSON array.
+    ///
+    BSONCXX_INLINE bsoncxx::array::view view() const {
+        return _core.view_array();
+    }
 
-        BSONCXX_INLINE operator bsoncxx::array::view() const {
-            return view();
-        }
+    ///
+    /// @return A view of the BSON array.
+    ///
+    BSONCXX_INLINE operator bsoncxx::array::view() const {
+        return view();
+    }
 
-        ///
-        /// Transfer ownership of the underlying array to the caller.
-        ///
-        /// @return An array::value with ownership of the array.
-        ///
-        /// @warning
-        ///  After calling extract() it is illegal to call any methods
-        ///  on this class, unless it is subsequenly moved into.
-        ///
-        BSONCXX_INLINE bsoncxx::array::value extract() {
-            return _core.extract_array();
-        }
+    ///
+    /// Transfer ownership of the underlying array to the caller.
+    ///
+    /// @return An array::value with ownership of the array.
+    ///
+    /// @warning
+    ///  After calling extract() it is illegal to call any methods
+    ///  on this class, unless it is subsequenly moved into.
+    ///
+    BSONCXX_INLINE bsoncxx::array::value extract() {
+        return _core.extract_array();
+    }
 
-        ///
-        /// Reset the underlying BSON to an empty array.
-        ///
-        BSONCXX_INLINE void clear() {
-            _core.clear();
-        }
+    ///
+    /// Reset the underlying BSON to an empty array.
+    ///
+    BSONCXX_INLINE void clear() {
+        _core.clear();
+    }
 
-    private:
-        core _core;
-    };
+   private:
+    core _core;
+};
 
 }  // namespace stream
 }  // namespace builder

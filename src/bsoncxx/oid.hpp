@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
-#include <iostream>
+#include <array>
 #include <ctime>
 #include <string>
 
-#include <bsoncxx/stdx/string_view.hpp>
+#include <bsoncxx/string/view_or_value.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -38,7 +38,13 @@ BSONCXX_INLINE_NAMESPACE_BEGIN
 class BSONCXX_API oid {
    public:
     struct init_tag_t {};
-    static constexpr init_tag_t init_tag{};
+
+    // TODO(MSVC): Ideally this would be constexpr, but VS2015U1 can't
+    // handle it.
+    //
+    // See https://connect.microsoft.com/VisualStudio/feedback/details/2092790
+    //
+    static const init_tag_t init_tag;
 
     ///
     /// Constructs an uninitialized oid.
@@ -64,12 +70,12 @@ class BSONCXX_API oid {
     explicit oid(const char* bytes, std::size_t len);
 
     ///
-    /// Constructs and oid an initializes it from the provided hex string.
+    /// Constructs an oid and initializes it from the provided hex string.
     ///
     /// @param str
-    ///   A string_view of a hexadecimal representation of a valid ObjectId.
+    ///   A string of a hexadecimal representation of a valid ObjectId.
     ///
-    explicit oid(stdx::string_view str);
+    explicit oid(const string::view_or_value& str);
 
     ///
     /// Converts this oid to a hexadecimal string.
@@ -78,13 +84,28 @@ class BSONCXX_API oid {
     ///
     std::string to_string() const;
 
-    friend BSONCXX_API bool operator<(const oid& lhs, const oid& rhs);
-    friend BSONCXX_API bool operator>(const oid& lhs, const oid& rhs);
-    friend BSONCXX_API bool operator<=(const oid& lhs, const oid& rhs);
-    friend BSONCXX_API bool operator>=(const oid& lhs, const oid& rhs);
-    friend BSONCXX_API bool operator==(const oid& lhs, const oid& rhs);
-    friend BSONCXX_API bool operator!=(const oid& lhs, const oid& rhs);
+    ///
+    /// @{
+    ///
+    /// Relational operators for OIDs
+    ///
+    /// @relates oid
+    ///
+    friend BSONCXX_API bool BSONCXX_CALL operator<(const oid& lhs, const oid& rhs);
+    friend BSONCXX_API bool BSONCXX_CALL operator>(const oid& lhs, const oid& rhs);
+    friend BSONCXX_API bool BSONCXX_CALL operator<=(const oid& lhs, const oid& rhs);
+    friend BSONCXX_API bool BSONCXX_CALL operator>=(const oid& lhs, const oid& rhs);
+    friend BSONCXX_API bool BSONCXX_CALL operator==(const oid& lhs, const oid& rhs);
+    friend BSONCXX_API bool BSONCXX_CALL operator!=(const oid& lhs, const oid& rhs);
+    ///
+    /// @}
+    ///
 
+    ///
+    /// Conversion operator that indicates that the oid is initialized.
+    ///
+    /// @return True if the oid is initialized.
+    ///
     explicit operator bool() const;
 
     ///
@@ -94,15 +115,19 @@ class BSONCXX_API oid {
     ///
     std::time_t get_time_t() const;
 
-    friend BSONCXX_API std::ostream& operator<<(std::ostream& out, const oid& rhs);
-
+    ///
+    /// An accessor for the internal data buffer in the oid.
+    ///
+    /// @return A pointer to the internal buffer holding the oid bytes.
+    ///
     const char* bytes() const;
 
    private:
-    friend BSONCXX_API int oid_compare(const oid& lhs, const oid& rhs);
+    friend BSONCXX_PRIVATE int oid_compare(const oid& lhs, const oid& rhs);
 
     bool _is_valid;
-    char _bytes[12];
+
+    std::array<char, 12> _bytes;
 };
 
 BSONCXX_INLINE_NAMESPACE_END

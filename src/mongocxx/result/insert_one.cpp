@@ -14,6 +14,8 @@
 
 #include <mongocxx/result/insert_one.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace result {
@@ -33,5 +35,3 @@ const bsoncxx::types::value& insert_one::inserted_id() const {
 }  // namespace result
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

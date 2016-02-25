@@ -14,6 +14,8 @@
 
 #include <mongocxx/options/client.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace options {
@@ -22,12 +24,10 @@ void client::ssl_opts(ssl ssl_opts) {
     _ssl_opts = ssl_opts;
 }
 
-const bsoncxx::stdx::optional<ssl>& client::ssl_opts() const {
+const stdx::optional<ssl>& client::ssl_opts() const {
     return _ssl_opts;
 }
 
 }  // namespace options
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

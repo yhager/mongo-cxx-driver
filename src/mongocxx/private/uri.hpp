@@ -15,21 +15,24 @@
 #pragma once
 
 #include <mongocxx/uri.hpp>
+#include <mongocxx/private/libmongoc.hpp>
 
-#include <mongoc.h>
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class uri::impl {
    public:
-    impl(mongoc_uri_t* uri) : uri_t(uri) {}
-    ~impl() { mongoc_uri_destroy(uri_t); }
+    impl(mongoc_uri_t* uri) : uri_t(uri) {
+    }
+    ~impl() {
+        libmongoc::uri_destroy(uri_t);
+    }
     mongoc_uri_t* uri_t;
-
-}; // class impl
+};
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

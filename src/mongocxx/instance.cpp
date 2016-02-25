@@ -14,12 +14,16 @@
 
 #include <mongocxx/instance.hpp>
 
+#include <mutex>
 #include <utility>
 
 #include <bsoncxx/stdx/make_unique.hpp>
-
+#include <mongocxx/exception/error_code.hpp>
+#include <mongocxx/exception/logic_error.hpp>
 #include <mongocxx/logger.hpp>
 #include <mongocxx/private/libmongoc.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -43,8 +47,7 @@ log_level convert_log_level(::mongoc_log_level_t mongoc_log_level) {
         case MONGOC_LOG_LEVEL_TRACE:
             return log_level::k_trace;
         default:
-            // TODO: MONGOCXX_UNREACHABLE (CXX-628)
-            std::abort();
+            MONGOCXX_UNREACHABLE;
     }
 }
 
@@ -56,6 +59,10 @@ void user_log_handler(::mongoc_log_level_t mongoc_log_level, const char *log_dom
     (*static_cast<logger *>(user_data))(convert_log_level(mongoc_log_level),
                                         stdx::string_view{log_domain}, stdx::string_view{message});
 }
+
+std::recursive_mutex instance_mutex;
+instance *current_instance = nullptr;
+std::unique_ptr<instance> global_instance;
 
 }  // namespace
 
@@ -85,13 +92,33 @@ class instance::impl {
 instance::instance() : instance(nullptr) {
 }
 
-instance::instance(std::unique_ptr<logger> logger)
-    : _impl(stdx::make_unique<impl>(std::move(logger))) {
+instance::instance(std::unique_ptr<logger> logger) {
+    std::lock_guard<std::recursive_mutex> lock(instance_mutex);
+    if (current_instance) {
+        throw logic_error{error_code::k_instance_already_exists};
+    }
+    _impl = stdx::make_unique<impl>(std::move(logger));
+    current_instance = this;
 }
 
 instance::instance(instance &&) noexcept = default;
 instance &instance::operator=(instance &&) noexcept = default;
-instance::~instance() = default;
+
+instance::~instance() {
+    std::lock_guard<std::recursive_mutex> lock(instance_mutex);
+    if (current_instance != this) std::abort();
+    _impl.reset();
+    current_instance = nullptr;
+}
+
+instance &instance::current() {
+    std::lock_guard<std::recursive_mutex> lock(instance_mutex);
+    if (!current_instance) {
+        global_instance.reset(new instance);
+        current_instance = global_instance.get();
+    }
+    return *current_instance;
+}
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx

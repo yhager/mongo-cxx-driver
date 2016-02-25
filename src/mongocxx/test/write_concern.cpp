@@ -14,16 +14,16 @@
 
 #include "catch.hpp"
 
+#include <mongocxx/exception/exception.hpp>
+#include <mongocxx/instance.hpp>
 #include <mongocxx/write_concern.hpp>
 
 using namespace mongocxx;
 
 TEST_CASE("a default write_concern", "[write_concern]") {
-    write_concern wc{};
+    instance::current();
 
-    SECTION("doesn't require the server to fsync") {
-        REQUIRE(wc.fsync() == false);
-    }
+    write_concern wc{};
 
     SECTION("doesn't require the server to journal") {
         REQUIRE(wc.journal() == false);
@@ -34,9 +34,15 @@ TEST_CASE("a default write_concern", "[write_concern]") {
         REQUIRE(timeout == decltype(timeout)::zero());
     }
 
-    SECTION("will require confirmation from just the primary or standalone mongod") {
-        // TODO: fix me
-        REQUIRE(-2 == wc.nodes());
+    SECTION("has either acknowledge_level or nodes") {
+        bool has_ack_level = wc.acknowledge_level() ? true : false;
+        bool has_nodes = wc.nodes() ? true : false;
+        REQUIRE(has_ack_level != has_nodes);
+    }
+
+    SECTION("has default acknowledge_level") {
+        REQUIRE(wc.acknowledge_level());
+        REQUIRE(write_concern::level::k_default == *wc.acknowledge_level());
     }
 
     SECTION("has empty tag set") {
@@ -45,12 +51,9 @@ TEST_CASE("a default write_concern", "[write_concern]") {
 }
 
 TEST_CASE("write_concern fields may be set and retrieved", "[write_concern]") {
-    write_concern wc{};
+    instance::current();
 
-    SECTION("fsync may be configured") {
-        wc.fsync(true);
-        REQUIRE(wc.fsync() == true);
-    }
+    write_concern wc{};
 
     SECTION("journal may be configured") {
         wc.journal(true);
@@ -67,12 +70,28 @@ TEST_CASE("write_concern fields may be set and retrieved", "[write_concern]") {
     SECTION("a tag may be set") {
         const std::string tag{"MultipleDC"};
         wc.tag(tag);
-        REQUIRE(tag == wc.tag());
+        auto maybe_tag = wc.tag();
+        REQUIRE(maybe_tag);
+        REQUIRE(tag == *maybe_tag);
     }
 
     SECTION("the number of nodes requiring confirmation may be set to a number") {
         wc.nodes(10);
-        REQUIRE(wc.nodes() == 10);
+        REQUIRE(wc.nodes());
+        REQUIRE(*wc.nodes() == 10);
+    }
+
+    SECTION("can set acknowledge_level") {
+        wc.acknowledge_level(write_concern::level::k_unacknowledged);
+        REQUIRE(!wc.nodes());
+        REQUIRE(write_concern::level::k_unacknowledged == *wc.acknowledge_level());
+    }
+
+    SECTION("setting invalid acknowledge levels throws") {
+        REQUIRE_THROWS_AS(wc.acknowledge_level(write_concern::level::k_unknown), exception);
+        REQUIRE_THROWS_AS(wc.acknowledge_level(write_concern::level::k_tag), exception);
+        wc.tag("AnyTag");
+        REQUIRE_NOTHROW(wc.acknowledge_level(write_concern::level::k_tag));
     }
 
     SECTION("the number of nodes requiring confirmation may be set to the majority") {
@@ -84,6 +103,8 @@ TEST_CASE("write_concern fields may be set and retrieved", "[write_concern]") {
 
 TEST_CASE("confirmation from tags, a repl-member count, and majority are mutually exclusive",
           "[write_concern]") {
+    instance::current();
+
     SECTION("setting the confirmation number unsets the confirmation tag") {
         write_concern wc{};
         wc.tag("MultipleDC");
@@ -102,7 +123,14 @@ TEST_CASE("confirmation from tags, a repl-member count, and majority are mutuall
         write_concern wc{};
         wc.nodes(10);
         wc.tag("MultipleDC");
-        REQUIRE(-4 == wc.nodes());
+        REQUIRE(!wc.nodes());
+    }
+
+    SECTION("setting the tag sets the acknowledge level") {
+        write_concern wc{};
+        wc.tag("MultipleDC");
+        REQUIRE(wc.acknowledge_level());
+        REQUIRE(write_concern::level::k_tag == *wc.acknowledge_level());
     }
 
     SECTION("setting the tag unsets majority") {
@@ -116,7 +144,7 @@ TEST_CASE("confirmation from tags, a repl-member count, and majority are mutuall
         write_concern wc{};
         wc.nodes(10);
         wc.majority(std::chrono::milliseconds(100));
-        REQUIRE(-3 == wc.nodes());
+        REQUIRE(write_concern::level::k_majority == *wc.acknowledge_level());
     }
 
     SECTION("setting majority unsets the tag") {

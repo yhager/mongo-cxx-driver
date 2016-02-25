@@ -14,14 +14,15 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <cstdint>
 #include <string>
 #include <memory>
 
-#include <bsoncxx/document/view.hpp>
+#include <bsoncxx/document/view_or_value.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+#include <mongocxx/stdx.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -29,6 +30,7 @@ MONGOCXX_INLINE_NAMESPACE_BEGIN
 class client;
 class collection;
 class database;
+class uri;
 
 ///
 /// Class representing a preference for how the driver routes read operations to members of a
@@ -50,9 +52,7 @@ class database;
 /// @see http://docs.mongodb.org/manual/core/read-preference/
 ///
 class MONGOCXX_API read_preference {
-
    public:
-
     ///
     /// Determines which members in a replica set are acceptable to read from.
     ///
@@ -109,7 +109,7 @@ class MONGOCXX_API read_preference {
     ///
     /// @see http://docs.mongodb.org/manual/core/read-preference/#tag-sets
     ///
-    read_preference(read_mode mode, bsoncxx::document::view tags);
+    read_preference(read_mode mode, bsoncxx::document::view_or_value tags);
 
     ///
     /// Copy constructs a read_preference.
@@ -137,18 +137,6 @@ class MONGOCXX_API read_preference {
     ~read_preference();
 
     ///
-    /// Gets a handle to the underlying implementation.
-    ///
-    /// Returned pointer is only valid for the lifetime of this object.
-    ///
-    /// @deprecated Future versions of the driver reserve the right to change the implementation
-    ///   and remove this interface entirely.
-    ///
-    /// @return Pointer to implementation of this object, or nullptr if not available.
-    ///
-    MONGOCXX_DEPRECATED void* implementation() const;
-
-    ///
     /// Sets a new mode for this read_preference.
     ///
     /// @param mode
@@ -169,31 +157,28 @@ class MONGOCXX_API read_preference {
     /// @param tags
     ///   Document representing the tags.
     ///
-    void tags(bsoncxx::document::view tags);
+    void tags(bsoncxx::document::view_or_value tags);
 
     ///
     /// Returns the current tags for this read_preference.
     ///
     /// @return The optionally set current tags.
     ///
-    bsoncxx::stdx::optional<bsoncxx::document::view> tags() const;
-
-    ///
-    /// Comparison operator
-    ///
-    bool operator==(const read_preference&) const;
+    stdx::optional<bsoncxx::document::view> tags() const;
 
    private:
     friend client;
     friend collection;
     friend database;
+    friend uri;
+    friend MONGOCXX_API bool MONGOCXX_CALL
+    operator==(const read_preference&, const read_preference&);
 
     class MONGOCXX_PRIVATE impl;
 
-    read_preference(std::unique_ptr<impl>&& implementation);
+    MONGOCXX_PRIVATE read_preference(std::unique_ptr<impl>&& implementation);
 
     std::unique_ptr<impl> _impl;
-
 };
 
 MONGOCXX_INLINE_NAMESPACE_END

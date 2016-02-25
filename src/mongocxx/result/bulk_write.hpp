@@ -14,14 +14,15 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <cstdint>
+#include <map>
 #include <vector>
 
 #include <bsoncxx/document/value.hpp>
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/types.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -31,8 +32,12 @@ namespace result {
 /// Class representing the result of a MongoDB bulk write operation.
 ///
 class MONGOCXX_API bulk_write {
-
    public:
+    using id_map = std::map<std::size_t, bsoncxx::document::element>;
+
+    ///
+    /// @todo documment this method
+    ///
     explicit bulk_write(bsoncxx::document::value raw_response);
 
     ///
@@ -40,56 +45,49 @@ class MONGOCXX_API bulk_write {
     ///
     /// @return The number of documents that were inserted.
     ///
-    std::int64_t inserted_count() const;
+    std::int32_t inserted_count() const;
 
     ///
     /// Gets the number of documents that were matched during this operation.
     ///
     /// @return The number of documents that were matched.
     ///
-    std::int64_t matched_count() const;
+    std::int32_t matched_count() const;
 
     ///
     /// Gets the number of documents that were modified during this operation.
     ///
     /// @return The number of documents that were modified.
     ///
-    std::int64_t modified_count() const;
+    std::int32_t modified_count() const;
 
     ///
     /// Gets the number of documents that were deleted during this operation.
     ///
     /// @return The number of documents that were deleted.
     ///
-    std::int64_t deleted_count() const;
+    std::int32_t deleted_count() const;
 
     ///
     /// Gets the number of documents that were upserted during this operation.
     ///
     /// @return The number of documents that were upserted.
     ///
-    std::int64_t upserted_count() const;
-
-    ///
-    /// Gets the ids of the inserted documents.
-    ///
-    /// @return The values of the _id field for inserted documents.
-    ///
-    bsoncxx::document::element inserted_ids() const;
+    std::int32_t upserted_count() const;
 
     ///
     /// Gets the ids of the upserted documents.
     ///
-    /// @return The values of the _id field for upserted documents.
+    /// @note The returned id_map must not be accessed after the bulk_write object is destroyed.
+    /// @return A map from bulk write index to _id field for upserted documents.
     ///
-    bsoncxx::document::element upserted_ids() const;
+    id_map upserted_ids() const;
 
    private:
-    bsoncxx::document::view view() const;
+    MONGOCXX_PRIVATE bsoncxx::document::view view() const;
 
     bsoncxx::document::value _response;
-
-}; // class bulk_write
+};
 
 }  // namespace result
 MONGOCXX_INLINE_NAMESPACE_END

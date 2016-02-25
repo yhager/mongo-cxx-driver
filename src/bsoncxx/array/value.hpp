@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <cstdlib>
 #include <memory>
 
 #include <bsoncxx/array/view.hpp>
 #include <bsoncxx/document/value.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -32,9 +32,8 @@ namespace array {
 /// sparingly; array::view should be used instead wherever possible.
 ///
 class BSONCXX_API value {
-
    public:
-    using deleter_type = void(*)(std::uint8_t*);
+    using deleter_type = void (*)(std::uint8_t*);
     using unique_ptr_type = std::unique_ptr<uint8_t, deleter_type>;
 
     ///
@@ -82,6 +81,12 @@ class BSONCXX_API value {
     /// Get a view over the document owned by this value.
     ///
     BSONCXX_INLINE array::view view() const noexcept;
+
+    ///
+    /// Conversion operator that provides a view given a value.
+    ///
+    /// @return A view over the value.
+    ///
     BSONCXX_INLINE operator array::view() const noexcept;
 
     ///

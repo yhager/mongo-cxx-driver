@@ -14,14 +14,16 @@
 
 #include <mongocxx/model/insert_one.hpp>
 
+#include <mongocxx/config/private/prelude.hpp>
+
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace model {
 
-insert_one::insert_one(bsoncxx::document::view document) : _document(std::move(document)) {
+insert_one::insert_one(bsoncxx::document::view_or_value document) : _document(std::move(document)) {
 }
 
-const bsoncxx::document::view& insert_one::document() const {
+const bsoncxx::document::view_or_value& insert_one::document() const {
     return _document;
 }
 

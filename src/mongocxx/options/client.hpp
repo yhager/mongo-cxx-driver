@@ -14,12 +14,12 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <string>
 
 #include <mongocxx/options/ssl.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -31,9 +31,7 @@ namespace options {
 /// Class representing the optional arguments to a MongoDB driver client object.
 ///
 class MONGOCXX_API client {
-
    public:
-
     ///
     /// Sets the SSL-related options.
     ///
@@ -47,11 +45,10 @@ class MONGOCXX_API client {
     ///
     /// @return The SSL-related options.
     ///
-    const bsoncxx::stdx::optional<ssl>& ssl_opts() const;
+    const stdx::optional<ssl>& ssl_opts() const;
 
    private:
-    bsoncxx::stdx::optional<ssl> _ssl_opts;
-
+    stdx::optional<ssl> _ssl_opts;
 };
 
 }  // namespace options

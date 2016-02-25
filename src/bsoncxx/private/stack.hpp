@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
-#include <type_traits>
-#include <memory>
 #include <list>
+#include <memory>
+#include <type_traits>
+
+#include <bsoncxx/config/private/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -26,7 +26,8 @@ BSONCXX_INLINE_NAMESPACE_BEGIN
 template <typename T, std::size_t size>
 class stack {
    public:
-    stack() : _bucket_index(0), _bucket_size(size), _is_empty(true) {}
+    stack() : _bucket_index(0), _bucket_size(size), _is_empty(true) {
+    }
 
     ~stack() {
         while (!empty()) {
@@ -39,9 +40,13 @@ class stack {
         }
     }
 
-    bool empty() const { return _is_empty; }
+    bool empty() const {
+        return _is_empty;
+    }
 
-    T &back() { return *(_get_ptr()); }
+    T &back() {
+        return *(_get_ptr());
+    }
 
     template <typename... Args>
     void emplace_back(Args &&... args) {
@@ -54,7 +59,9 @@ class stack {
         new (_get_ptr()) T(std::forward<Args>(args)...);
     }
 
-    void pop_back() { _dec(); }
+    void pop_back() {
+        _dec();
+    }
 
     void unsafe_reset() {
         _bucket_index = 0;
@@ -69,7 +76,7 @@ class stack {
 
     std::list<T *> _buckets;
 
-    typename decltype(_buckets)::iterator _bucket_iter;
+    typename std::list<T *>::iterator _bucket_iter;
 
     int _bucket_index;
     int _bucket_size;
@@ -134,4 +141,4 @@ class stack {
 BSONCXX_INLINE_NAMESPACE_END
 }  // namespace bsoncxx
 
-#include <bsoncxx/config/postlude.hpp>
+#include <bsoncxx/config/private/postlude.hpp>

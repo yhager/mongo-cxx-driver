@@ -14,30 +14,27 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
 #include <mongocxx/cursor.hpp>
 #include <mongocxx/private/libmongoc.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 class cursor::impl {
-
    public:
-    impl(mongoc_cursor_t* cursor)
-        : cursor_t(cursor)
-    {}
+    impl(mongoc_cursor_t* cursor) : cursor_t(cursor) {
+    }
 
     ~impl() {
         libmongoc::cursor_destroy(cursor_t);
     }
 
     mongoc_cursor_t* cursor_t;
-
-}; // class impl
+};
 
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
 
-#include <mongocxx/config/postlude.hpp>
+#include <mongocxx/config/private/postlude.hpp>

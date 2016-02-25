@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <string>
 
 #include <bsoncxx/document/value.hpp>
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -33,7 +33,7 @@ BSONCXX_INLINE_NAMESPACE_BEGIN
 ///
 /// @returns A JSON string.
 ///
-BSONCXX_API std::string to_json(document::view view);
+BSONCXX_API std::string BSONCXX_CALL to_json(document::view view);
 
 ///
 /// Converts an element (key-value pair) to a JSON key-value pair.
@@ -44,7 +44,7 @@ BSONCXX_API std::string to_json(document::view view);
 ///
 /// @returns A JSON key-value pair.
 ///
-BSONCXX_API std::string to_json(document::element element);
+BSONCXX_API std::string BSONCXX_CALL to_json(document::element element);
 
 ///
 /// Converts a BSON value to its JSON string representation.
@@ -55,7 +55,7 @@ BSONCXX_API std::string to_json(document::element element);
 ///
 /// @returns A JSON value.
 ///
-BSONCXX_API std::string to_json(types::value value);
+BSONCXX_API std::string BSONCXX_CALL to_json(types::value value);
 
 ///
 /// Constructs a new document::value from the provided JSON text
@@ -63,9 +63,12 @@ BSONCXX_API std::string to_json(types::value value);
 /// @param 'json'
 ///  A string_view into a JSON document
 ///
-/// @returns An engaged optional containing a document::value if conversion worked.
+/// @returns A document::value if conversion worked.
 ///
-BSONCXX_API stdx::optional<document::value> from_json(stdx::string_view json);
+/// @throws A bsoncxx::exception containing error details, if the
+/// conversion failed.
+///
+BSONCXX_API document::value BSONCXX_CALL from_json(stdx::string_view json);
 
 BSONCXX_INLINE_NAMESPACE_END
 }  // namespace bsoncxx

@@ -14,14 +14,15 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
+#include <chrono>
 #include <cstdint>
 #include <string>
 
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/stdx/optional.hpp>
 #include <mongocxx/read_preference.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -31,27 +32,25 @@ namespace options {
 /// Class representing the optional arguments to a MongoDB distinct command.
 ///
 class MONGOCXX_API distinct {
-
    public:
-
     ///
     /// Sets the maximum amount of time for this operation to run (server-side) in milliseconds.
     ///
-    /// @param max_time_ms
+    /// @param max_time
     ///   The max amount of time (in milliseconds).
     ///
     /// @see http://docs.mongodb.org/manual/reference/operator/meta/maxTimeMS
     ///
-    void max_time_ms(std::int64_t max_time_ms);
+    void max_time(std::chrono::milliseconds max_time);
 
     ///
-    /// The current max_time_ms setting.
+    /// The current max_time setting.
     ///
     /// @return The current max time (in milliseconds).
     ///
     /// @see http://docs.mongodb.org/manual/reference/operator/meta/maxTimeMS
     ///
-    const bsoncxx::stdx::optional<std::int64_t>& max_time_ms() const;
+    const stdx::optional<std::chrono::milliseconds>& max_time() const;
 
     ///
     /// Sets the read_preference for this operation.
@@ -70,12 +69,11 @@ class MONGOCXX_API distinct {
     ///
     /// @see http://docs.mongodb.org/manual/core/read-preference/
     ///
-    const bsoncxx::stdx::optional<class read_preference>& read_preference() const;
+    const stdx::optional<class read_preference>& read_preference() const;
 
    private:
-    bsoncxx::stdx::optional<std::int64_t> _max_time_ms;
-    bsoncxx::stdx::optional<class read_preference> _read_preference;
-
+    stdx::optional<std::chrono::milliseconds> _max_time;
+    stdx::optional<class read_preference> _read_preference;
 };
 
 }  // namespace options

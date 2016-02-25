@@ -14,43 +14,41 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
+#include <chrono>
 #include <cstdint>
 #include <string>
 
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+#include <mongocxx/hint.hpp>
 #include <mongocxx/read_preference.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
-namespace options {
 
-// TODO: take hint as a std::string parameter in addition to bsoncxx::document::view
-// TODO: figure out hint (make a new type or use bsoncxx::element?)
+namespace options {
 
 ///
 /// Class representing the optional arguments to a MongoDB count command
 ///
 class MONGOCXX_API count {
-
    public:
-
     ///
     /// Sets the index to use for this operation.
     ///
-    /// @param hint
-    ///   Document representing the index to use.
+    /// @param index_hint
+    ///   Object representing the index to use.
     ///
-    void hint(bsoncxx::document::view hint);
+    void hint(class hint index_hint);
 
     ///
-    /// Gets the current index being hinted.
+    /// Gets the current hint.
     ///
-    /// @return The current hint.
+    /// @return The current hint, if one is set.
     ///
-    const bsoncxx::stdx::optional<bsoncxx::document::view>& hint() const;
+    const stdx::optional<class hint>& hint() const;
 
     ///
     /// Sets the maximum number of documents to count.
@@ -65,26 +63,26 @@ class MONGOCXX_API count {
     ///
     /// @return The current limit.
     ///
-    const bsoncxx::stdx::optional<std::int64_t>& limit() const;
+    const stdx::optional<std::int64_t>& limit() const;
 
     ///
     /// Sets the maximum amount of time for this operation to run (server-side) in milliseconds.
     ///
-    /// @param max_time_ms
+    /// @param max_time
     ///   The max amount of time (in milliseconds).
     ///
     /// @see http://docs.mongodb.org/manual/reference/operator/meta/maxTimeMS
     ///
-    void max_time_ms(std::int64_t max_time_ms);
+    void max_time(std::chrono::milliseconds max_time);
 
     ///
-    /// The current max_time_ms setting.
+    /// The current max_time setting.
     ///
     /// @return The current max time (in milliseconds).
     ///
     /// @see http://docs.mongodb.org/manual/reference/operator/meta/maxTimeMS
     ///
-    const bsoncxx::stdx::optional<std::int64_t>& max_time_ms() const;
+    const stdx::optional<std::chrono::milliseconds>& max_time() const;
 
     ///
     /// Sets the number of documents to skip before counting documents.
@@ -103,7 +101,7 @@ class MONGOCXX_API count {
     ///
     /// @see http://docs.mongodb.org/manual/reference/method/cursor.skip/
     ///
-    const bsoncxx::stdx::optional<std::int64_t>& skip() const;
+    const stdx::optional<std::int64_t>& skip() const;
 
     ///
     /// Sets the read_preference for this operation.
@@ -122,15 +120,14 @@ class MONGOCXX_API count {
     ///
     /// @see http://docs.mongodb.org/manual/core/read-preference/
     ///
-    const bsoncxx::stdx::optional<class read_preference>& read_preference() const;
+    const stdx::optional<class read_preference>& read_preference() const;
 
    private:
-    bsoncxx::stdx::optional<bsoncxx::document::view> _hint;
-    bsoncxx::stdx::optional<std::int64_t> _limit;
-    bsoncxx::stdx::optional<std::int64_t> _max_time_ms;
-    bsoncxx::stdx::optional<std::int64_t> _skip;
-    bsoncxx::stdx::optional<class read_preference> _read_preference;
-
+    stdx::optional<class hint> _hint;
+    stdx::optional<std::int64_t> _limit;
+    stdx::optional<std::chrono::milliseconds> _max_time;
+    stdx::optional<std::int64_t> _skip;
+    stdx::optional<class read_preference> _read_preference;
 };
 
 }  // namespace options

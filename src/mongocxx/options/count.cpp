@@ -13,22 +13,25 @@
 // limitations under the License.
 
 #include <mongocxx/options/count.hpp>
+
 #include <mongocxx/private/read_preference.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 namespace options {
 
-void count::hint(bsoncxx::document::view hint) {
-    _hint = std::move(hint);
+void count::hint(class hint index_hint) {
+    _hint = std::move(index_hint);
 }
 
 void count::limit(std::int64_t limit) {
     _limit = limit;
 }
 
-void count::max_time_ms(std::int64_t max_time_ms) {
-    _max_time_ms = max_time_ms;
+void count::max_time(std::chrono::milliseconds max_time) {
+    _max_time = std::move(max_time);
 }
 
 void count::skip(std::int64_t skip) {
@@ -39,28 +42,26 @@ void count::read_preference(class read_preference rp) {
     _read_preference = std::move(rp);
 }
 
-const bsoncxx::stdx::optional<bsoncxx::document::view>& count::hint() const {
+const stdx::optional<class hint>& count::hint() const {
     return _hint;
 }
 
-const bsoncxx::stdx::optional<std::int64_t>& count::limit() const {
+const stdx::optional<std::int64_t>& count::limit() const {
     return _limit;
 }
 
-const bsoncxx::stdx::optional<std::int64_t>& count::max_time_ms() const {
-    return _max_time_ms;
+const stdx::optional<std::chrono::milliseconds>& count::max_time() const {
+    return _max_time;
 }
 
-const bsoncxx::stdx::optional<std::int64_t>& count::skip() const {
+const stdx::optional<std::int64_t>& count::skip() const {
     return _skip;
 }
 
-const bsoncxx::stdx::optional<read_preference>& count::read_preference() const {
+const stdx::optional<read_preference>& count::read_preference() const {
     return _read_preference;
 }
 
 }  // namespace options
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

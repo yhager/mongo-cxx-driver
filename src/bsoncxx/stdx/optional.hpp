@@ -34,7 +34,26 @@ using ::core::make_optional;
 }  // namespace stdx
 }  // namespace bsoncxx
 
+#elif defined(BSONCXX_POLY_USE_BOOST)
+
+#include <boost/none.hpp>
+#include <boost/optional/optional.hpp>
+
+namespace bsoncxx {
+namespace stdx {
+
+using ::boost::optional;
+using nullopt_t = ::boost::none_t;
+
+// TODO(MSVC): This would be better expressed as constexpr, but VS2015U1 can't do it.
+const nullopt_t nullopt{::boost::none};
+using ::boost::make_optional;
+
+}  // namespace stdx
+}  // namespace bsoncxx
+
 #elif defined(BSONCXX_POLY_USE_STD_EXPERIMENTAL)
+
 #include <experimental/optional>
 
 namespace bsoncxx {

@@ -13,7 +13,10 @@
 // limitations under the License.
 
 #include <mongocxx/options/aggregate.hpp>
+
 #include <mongocxx/private/read_preference.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -25,8 +28,8 @@ void aggregate::allow_disk_use(bool allow_disk_use) {
 void aggregate::batch_size(std::int32_t batch_size) {
     _batch_size = batch_size;
 }
-void aggregate::max_time_ms(std::int64_t max_time_ms) {
-    _max_time_ms = max_time_ms;
+void aggregate::max_time(std::chrono::milliseconds max_time) {
+    _max_time = std::move(max_time);
 }
 void aggregate::use_cursor(bool use_cursor) {
     _use_cursor = use_cursor;
@@ -34,25 +37,31 @@ void aggregate::use_cursor(bool use_cursor) {
 void aggregate::read_preference(class read_preference rp) {
     _read_preference = std::move(rp);
 }
+void aggregate::bypass_document_validation(bool bypass_document_validation) {
+    _bypass_document_validation = bypass_document_validation;
+}
 
-const bsoncxx::stdx::optional<bool>& aggregate::allow_disk_use() const {
+const stdx::optional<bool>& aggregate::allow_disk_use() const {
     return _allow_disk_use;
 }
-const bsoncxx::stdx::optional<std::int32_t>& aggregate::batch_size() const {
+const stdx::optional<std::int32_t>& aggregate::batch_size() const {
     return _batch_size;
 }
-const bsoncxx::stdx::optional<std::int64_t>& aggregate::max_time_ms() const {
-    return _max_time_ms;
+
+const stdx::optional<std::chrono::milliseconds>& aggregate::max_time() const {
+    return _max_time;
 }
-const bsoncxx::stdx::optional<bool>& aggregate::use_cursor() const {
+
+const stdx::optional<bool>& aggregate::use_cursor() const {
     return _use_cursor;
 }
-const bsoncxx::stdx::optional<class read_preference>& aggregate::read_preference() const {
+const stdx::optional<class read_preference>& aggregate::read_preference() const {
     return _read_preference;
+}
+const stdx::optional<bool>& aggregate::bypass_document_validation() const {
+    return _bypass_document_validation;
 }
 
 }  // namespace options
 MONGOCXX_INLINE_NAMESPACE_END
 }  // namespace mongocxx
-
-#include <mongocxx/config/postlude.hpp>

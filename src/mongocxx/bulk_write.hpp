@@ -14,11 +14,10 @@
 
 #pragma once
 
-#include <mongocxx/config/prelude.hpp>
-
-#include <mongocxx/write_concern.hpp>
+#include <mongocxx/options/bulk_write.hpp>
 #include <mongocxx/model/write.hpp>
-#include <bsoncxx/stdx/optional.hpp>
+
+#include <mongocxx/config/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
@@ -40,9 +39,7 @@ class collection;
 /// @see http://docs.mongodb.org/manual/core/bulk-write-operations/
 ///
 class MONGOCXX_API bulk_write {
-
    public:
-
     ///
     /// Initializes a new bulk operation to be executed against a mongocxx::collection.
     ///
@@ -53,7 +50,7 @@ class MONGOCXX_API bulk_write {
     ///   be reported after attempting all operations. Unordered bulk writes may be more efficient
     ///   than ordered bulk writes.
     ///
-    explicit bulk_write(bool ordered);
+    explicit bulk_write(options::bulk_write options = {});
 
     ///
     /// Move constructs a bulk write operation.
@@ -88,39 +85,11 @@ class MONGOCXX_API bulk_write {
     ///
     void append(const model::write& operation);
 
-    ///
-    /// Gets a handle to the underlying implementation.
-    ///
-    /// Returned pointer is only valid for the lifetime of this object.
-    ///
-    /// @deprecated Future versions of the driver reserve the right to change the implementation
-    ///   and remove this interface entirely.
-    ///
-    /// @return Pointer to implementation of this object, or nullptr if not available.
-    ///
-    MONGOCXX_DEPRECATED void* implementation() const;
-
-    ///
-    /// Sets the write_concern for this operation.
-    ///
-    /// @param wc
-    ///   The write_concern to set
-    ///
-    void write_concern(class write_concern wc);
-
-    ///
-    /// Gets the write_concern for the bulk write.
-    ///
-    /// @return The current write_concern.
-    ///
-    class write_concern write_concern() const;
-
    private:
     friend class collection;
 
     class MONGOCXX_PRIVATE impl;
     std::unique_ptr<impl> _impl;
-
 };
 
 MONGOCXX_INLINE_NAMESPACE_END

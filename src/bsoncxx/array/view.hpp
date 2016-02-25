@@ -14,16 +14,14 @@
 
 #pragma once
 
-#include <bsoncxx/config/prelude.hpp>
-
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <iterator>
-#include <type_traits>
 
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/array/element.hpp>
+
+#include <bsoncxx/config/prelude.hpp>
 
 namespace bsoncxx {
 BSONCXX_INLINE_NAMESPACE_BEGIN
@@ -33,10 +31,9 @@ namespace array {
 /// A read-only, non-owning view of a BSON document.
 ///
 class BSONCXX_API view {
-
    public:
-    class iterator;
-    class const_iterator;
+    class BSONCXX_API iterator;
+    class BSONCXX_API const_iterator;
 
     ///
     /// @returns An const_iterator to the first element of the array.
@@ -126,14 +123,30 @@ class BSONCXX_API view {
 
     operator document::view() const;
 
-    friend BSONCXX_API bool operator==(view, view);
-    friend BSONCXX_API bool operator!=(view, view);
+    ///
+    /// @{
+    ///
+    /// Compare two views for (in)-equality
+    ///
+    /// @relates view
+    ///
+    friend BSONCXX_API bool BSONCXX_CALL operator==(view, view);
+    friend BSONCXX_API bool BSONCXX_CALL operator!=(view, view);
+    ///
+    /// @}
+    ///
 
    private:
     document::view _view;
 };
 
-class view::iterator : public std::iterator<std::forward_iterator_tag, element> {
+///
+/// A mutable iterator over the contents of an array view.
+///
+/// This iterator type provides a mutable forward iterator interface to array
+/// view elements.
+///
+class BSONCXX_API view::iterator : public std::iterator<std::forward_iterator_tag, element> {
    public:
     iterator();
     explicit iterator(const element& element);
@@ -144,15 +157,32 @@ class view::iterator : public std::iterator<std::forward_iterator_tag, element> 
     iterator& operator++();
     iterator operator++(int);
 
-    friend BSONCXX_API bool operator==(const iterator&, const iterator&);
-    friend BSONCXX_API bool operator!=(const iterator&, const iterator&);
+    ///
+    /// @{
+    ///
+    /// Compare two iterators for (in)-equality
+    ///
+    /// @relates view::iterator
+    ///
+    friend BSONCXX_API bool BSONCXX_CALL operator==(const iterator&, const iterator&);
+    friend BSONCXX_API bool BSONCXX_CALL operator!=(const iterator&, const iterator&);
+    ///
+    /// @}
+    ///
 
    private:
     element _element;
 };
 
-class view::const_iterator : public std::iterator<std::forward_iterator_tag, element, std::ptrdiff_t,
-                                                  const element*, const element&> {
+///
+/// A const iterator over the contents of an array view.
+///
+/// This iterator type provides a const forward iterator interface to array
+/// view elements.
+///
+class BSONCXX_API view::const_iterator
+    : public std::iterator<std::forward_iterator_tag, element, std::ptrdiff_t, const element*,
+                           const element&> {
    public:
     const_iterator();
     explicit const_iterator(const element& element);
@@ -163,8 +193,18 @@ class view::const_iterator : public std::iterator<std::forward_iterator_tag, ele
     const_iterator& operator++();
     const_iterator operator++(int);
 
-    friend BSONCXX_API bool operator==(const const_iterator&, const const_iterator&);
-    friend BSONCXX_API bool operator!=(const const_iterator&, const const_iterator&);
+    ///
+    /// @{
+    ///
+    /// Compare two const_iterators for (in)-equality
+    ///
+    /// @relates view::const_iterator
+    ///
+    friend BSONCXX_API bool BSONCXX_CALL operator==(const const_iterator&, const const_iterator&);
+    friend BSONCXX_API bool BSONCXX_CALL operator!=(const const_iterator&, const const_iterator&);
+    ///
+    /// @}
+    ///
 
    private:
     element _element;

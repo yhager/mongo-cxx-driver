@@ -17,20 +17,23 @@
 #include <utility>
 
 #include <bsoncxx/stdx/make_unique.hpp>
-
 #include <mongocxx/client.hpp>
+#include <mongocxx/exception/error_code.hpp>
+#include <mongocxx/exception/exception.hpp>
 #include <mongocxx/private/client.hpp>
 #include <mongocxx/private/pool.hpp>
-#include <mongocxx/private/uri.hpp>
 #include <mongocxx/private/ssl.hpp>
+#include <mongocxx/private/uri.hpp>
+
+#include <mongocxx/config/private/prelude.hpp>
 
 namespace mongocxx {
 MONGOCXX_INLINE_NAMESPACE_BEGIN
 
 void pool::_release(client* client) {
-    libmongoc::client_pool_push(_impl->client_pool_t, client->_impl->client_t);
+    libmongoc::client_pool_push(_impl->client_pool_t, client->_get_impl().client_t);
     // prevent client destructor from destroying the underlying mongoc_client_t
-    client->_impl->client_t = nullptr;
+    client->_get_impl().client_t = nullptr;
     delete client;
 }
 
@@ -40,11 +43,15 @@ pool::pool(const uri& mongodb_uri, stdx::optional<options::ssl> ssl_options)
     : _impl{stdx::make_unique<impl>(libmongoc::client_pool_new(mongodb_uri._impl->uri_t),
                                     std::move(ssl_options))} {
     if (_impl->ssl_options) {
+#if defined(MONGOC_HAVE_SSL)
         auto mongoc_opts = options::make_ssl_opts(*_impl->ssl_options);
         // We store ssl options in a member variable because we need the strings to stay alive so
         // libmongoc can use the raw char arrays, however, the mongoc_ssl_opt_t struct can be a
         // temporary as the driver will copy it.
         libmongoc::client_pool_set_ssl_opts(_impl->client_pool_t, &mongoc_opts);
+#else
+        throw exception{error_code::k_ssl_not_supported};
+#endif
     }
 }
 
@@ -55,13 +62,9 @@ pool::entry pool::acquire() {
 
 stdx::optional<pool::entry> pool::try_acquire() {
     auto cli = libmongoc::client_pool_try_pop(_impl->client_pool_t);
-    return cli ? stdx::make_optional<entry>({new client(cli), [this](client* client) {
-        _release(client);
-    }}) : stdx::nullopt;
-}
+    if (!cli) return stdx::nullopt;
 
-void* pool::implementation() const {
-    return _impl->client_pool_t;
+    return pool::entry{new client(cli), [this](client* client) { _release(client); }};
 }
 
 MONGOCXX_INLINE_NAMESPACE_END

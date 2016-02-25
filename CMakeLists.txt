@@ -1,21 +1,53 @@
-project(MONGO_CXX_DRIVER LANGUAGES CXX)
+# Copyright 2016 MongoDB Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
-if(EXISTS "/etc/os-release")
-  file(STRINGS /etc/os-release OS_INFO)
-  list(GET OS_INFO 2 OS_INFO_ID)
-  string(REPLACE "ID=" "" OS_INFO_ID_VALUE ${OS_INFO_ID})
-  if(${OS_INFO_ID_VALUE} STREQUAL "\"centos\"" OR ${OS_INFO_ID_VALUE} STREQUAL "\"rhel\"")
-    set(CPACK_GENERATOR "RPM")
-    set(LIBPATH "lib64")
-  elseif(${OS_INFO_ID_VALUE} STREQUAL ubuntu)
-    set(CPACK_GENERATOR "DEB")
-    set(LIBPATH "lib")
-  endif()
+if(POLICY CMP0025)
+  cmake_policy(SET CMP0025 NEW)
 endif()
 
-# Add in our modules
+project(MONGO_CXX_DRIVER LANGUAGES CXX)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8.2")
+    message(FATAL_ERROR "Insufficient GCC version - GCC 4.8.2+ required")
+  endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.0.23506")
+    message(FATAL_ERROR "Insufficient Microsoft Visual C++ version - MSVC 2015 Update 1+ required")
+  endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1")
+    message(FATAL_ERROR "Insufficient Apple clang version - XCode 5.1+ required")
+  endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.5")
+    message(FATAL_ERROR "Insufficient clang version - clang 3.5+ required")
+  endif()
+else()
+  message(WARNING "Unknown compiler... recklessly proceeding without a version check")
+endif()
+
+set (CMAKE_SKIP_BUILD_RPATH false)
+set (CMAKE_BUILD_WITH_INSTALL_RPATH false)
+set (CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
+# Ensure that RPATH is used on OSX
+set(CMAKE_MACOSX_RPATH 1)
+
+# Add in our modules, we write FindX modules for libbson and libmongoc
+# since they don't currently install them.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # Enforce the C++ standard, and disable extensions
@@ -24,19 +56,6 @@ if(NOT DEFINED CMAKE_CXX_STANDARD)
 endif()
 
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-# CMake 3.1 doesn't know how to C++11 for clang.
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    if (CMAKE_CXX_STANDARD EQUAL 11)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    elseif (CMAKE_CXX_STANDARD EQUAL 14)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-    else()
-        error("Don't know how to do that standard for Clang")
-    endif()
-else()
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endif()
 
 # Include the required modules
 include(GenerateExportHeader)
@@ -47,19 +66,6 @@ include(InstallRequiredSystemLibraries)
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
 endif()
-
-# Ensure we have Package Config
-find_package(PkgConfig)
-
-# Set PKG_CONFIG_PATH
-if(DEFINED $ENV{PKG_CONFIG_PATH})
-    set(PKG_CONFIG_PATH $ENV{PKG_CONFIG_PATH})
-else()
-    set(PKG_CONFIG_PATH "/usr/${LIBPATH}/pkgconfig")
-endif()
-
-# Ensure that RPATH is used on OSX
-set(CMAKE_MACOSX_RPATH 1)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type selected, default is Release")
@@ -73,30 +79,21 @@ add_custom_target(docs
     VERBATIM
 )
 
-add_custom_target(modernize
-    clang-modernize
-        -p ${CMAKE_BINARY_DIR}/compile_commands.json
-        -include ${CMAKE_CURRENT_SOURCE_DIR}
-        -exclude ${CMAKE_CURRENT_SOURCE_DIR}/mongocxx/test ${CMAKE_CURRENT_SORUCE_DIR}/bsoncxx/test
-        -format
+add_custom_target(format
+    python ${CMAKE_SOURCE_DIR}/etc/clang_format.py format
     VERBATIM
 )
 
-add_custom_target(format
-    perl -nle "/file/ or next; print ((split /: (.*)/)[1])" ${CMAKE_BINARY_DIR}/compile_commands.json |
-    grep -v "catch.hpp" |
-    grep -v "examples" |
-    xargs clang-format -i
+add_custom_target(format-lint
+    python ${CMAKE_SOURCE_DIR}/etc/clang_format.py lint
     VERBATIM
 )
+
+set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 
 enable_testing()
 
 add_subdirectory(src)
-
-if(BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif()
 
 INCLUDE(InstallRequiredSystemLibraries)
 
@@ -108,7 +105,7 @@ SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 SET(CPACK_PACKAGE_VERSION_MAJOR "0")
 SET(CPACK_PACKAGE_VERSION_MINOR "3")
-SET(CPACK_PACKAGE_VERSION_PATCH "9")
+SET(CPACK_PACKAGE_VERSION_PATCH "10")
 SET(CPACK_PACKAGE_NAME "libmongocxx")
 SET(CPACK_PACKAGE_CONTACT "Yuval Hager <yhager@jsonar.com>")
 
@@ -118,3 +115,5 @@ SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libmongoc, libbson")
 SET(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/usr/${LIBPATH}/pkgconfig")
 
 INCLUDE(CPack)
+
+add_subdirectory(examples EXCLUDE_FROM_ALL)
